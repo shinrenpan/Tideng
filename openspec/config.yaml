@@ -1,0 +1,87 @@
+# ==============================================================
+# Spectra 專案設定 — openspec/config.yaml
+# 負責「AI 產生 artifact 時的背景與規則」。
+# 行為開關（locale / tdd / parallel_tasks / worktree…）在 .spectra.yaml，不在這裡。
+# 另有「全域」設定在 ~/Library/Application Support/openspec/，由 `spectra config` 指令管，跨專案。
+#
+# mvvmc-* / swift-concurrency skills 在 ~/.claude/skills/（使用者層級），自動可用。
+# ==============================================================
+
+# ── schema：使用哪套工作流程 ──────────────────────────────────
+# 決定產哪些 artifact 及順序。目前只有 spec-driven（proposal → specs → design → tasks）。
+schema: spec-driven
+
+# ── context：專案背景（每次產 artifact 都會餵給 AI）──────────────
+# 這是「最高槓桿」的欄位：寫得越完整，AI 越不會猜錯／犯錯。
+# 注意：context: | 底下全是「純文字」，會原封不動送給 AI，這裡不能放 # 註解。
+#
+# 結構固定兩段：
+#   前段 ✏️ 專案背景 — tech stack / build / domain / 專案級決策，每個專案必改。
+#   後段 ✂️ 架構規範與專案性質 — 指向 mvvmc-* skills 當唯一真相（不重述規則，
+#         重述會 drift；HerbMeet 已實戰驗證），加上 solo 專案的 spec 定位宣言。
+context: |
+  Tech stack: Swift 6 (strict concurrency), iOS 17+, iPad only, SwiftUI hosted in UIKit
+  Build: xcodegen — App/project.yml generates the Xcode project. Local SPM packages
+  live in App/Packages (FHIRCore, FHIRClient, SmartAuth); features live in
+  App/Sources/Pages. Run xcodegen generate after adding or moving any file.
+  Domain: SMART on FHIR client. The user enters any FHIR R4 base URL, signs in through
+  SMART standalone launch (authorization code + PKCE), and browses clinical data.
+  Read-only — no writes, no offline queue, no medication verification. Target users are
+  small clinics in Taiwan; the wider context is the MOHW FHIR Box rollout and the THAS
+  app marketplace.
+  Project decisions: entry point is AppDelegate + SceneDelegate (UIKit lifecycle)
+  hosting SwiftUI via UIHostingController, NOT a SwiftUI @main App.
+  FHIR model types must go through the `FHIR.` namespace declared in FHIRCore — the
+  resource names Observation, Task and Bundle collide with Swift and Foundation types.
+  FHIRClient knows nothing about auth; SmartAuth implements its TokenProviding protocol,
+  so the dependency direction is SmartAuth -> FHIRClient, never the reverse.
+  Localization: base language is en, zh-Hant is a translation, managed through a String
+  Catalog. Keys belong to the compiler, values to the author — never invent a key.
+  Regulatory line: state facts, never clinical judgement. "Outside reference range" is a
+  fact; "abnormal", "suspected fever" or "consider follow-up" is judgement, and judgement
+  is what turns a record-keeping tool into a regulated medical device. This applies to
+  every user-facing string.
+  Further implementation constraints are in App/CLAUDE.md.
+
+  Architecture: MVVMC, governed by the user-global mvvmc-* and swift-concurrency
+  skills (view / viewmodel / model / hostcontroller / navigation / testing) —
+  follow them for all generated code and specs; do not restate or reinvent
+  their rules here.
+
+  Solo project (one developer + AI): specs exist for continuity across sessions
+  and tools, and as the canonical current design — keep narrative history out
+  of specs.
+
+# ── rules：各 artifact 的「硬規則」（每次自動套用）✂️ 整段可攜 ─────
+# key 是 artifact 名稱（proposal / design / specs / tasks），value 是規則清單。
+# 作用：把慣例變成「每次強制套用」的規則，不靠 AI 自覺。
+# 基底採 HerbMeet 實戰版（原 SpecDemo 規則 + backtick 交叉引用），再加 change 切片慣例。
+rules:
+  proposal:
+    # 強制列出範圍界線，避免 propose 範圍模糊、越做越大。
+    - Always include a Non-Goals section listing what is explicitly out of scope.
+    # change 照畫面切垂直片（MVVMC 直覺）；spec 的 domain/UI 分層不傳染到 change 切法。
+    # 抽獨立 domain capability 的門檻：≥2 個畫面消費，或邏輯本來就不屬於任何畫面。
+    - Cut every change as a vertical slice by screen/feature (MVVMC: one screen's M+V+VM+C ships together); a single change may touch multiple capability specs. Extract logic into a separate domain capability only when at least two screens consume it, or the rule lives outside any screen (e.g. server-side); otherwise keep it in the screen's capability spec.
+    # capability 增減時同步維護索引，防止 capability map 與現實 drift。
+    - When a proposal adds or removes a capability, update the capability map at `openspec/specs/README.md` (create the file once the project grows beyond a few capabilities).
+
+  design:
+    # 強制寫實作契約，讓 apply（甚至換人／換 AI）有明確可交接的驗收目標。
+    - Include an Implementation Contract naming observable behavior and acceptance criteria.
+    # 引用其他 capability 一律用 backtick 寫 spec 目錄名，保持 grep 可追蹤
+    # （HerbMeet 14 個 capability 交叉引用的實戰教訓）。
+    - When referencing another capability's behavior instead of restating it, name that capability's exact spec directory name in backticks (e.g. `user-auth`) so it's grep-discoverable — never a vague reference like "the auth system".
+
+  specs:
+    # 每條 requirement 至少一個 WHEN/THEN，確保規格「可被測試」。
+    - Every requirement must have at least one WHEN/THEN scenario.
+    # 場景描述「可觀察行為」（UI、VM 狀態或 server/API 契約）而非實作細節。
+    # 列舉含 server contract 是 HerbMeet 的教訓：domain capability 的場景多是 RPC/DB 行為。
+    - Scenarios must describe observable behavior (UI, ViewModel state, or server/API contract), not implementation details.
+
+  tasks:
+    # 每個任務都要有驗證目標，杜絕「只寫改哪個檔、不寫怎麼確認完成」的空任務。
+    - Each task must state a verification target (test name, CLI command, or manual assertion).
+    # 粒度控制：超過 1 小時的任務要拆，維持可追蹤、可交接。
+    - Split any task that would take more than one hour.

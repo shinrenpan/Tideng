@@ -11,3 +11,6 @@ build/
 # Server 本地資料
 Server/.env
 Server/pgdata/
+
+# Spectra app data
+.spectra/

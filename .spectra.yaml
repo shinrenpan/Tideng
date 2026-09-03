@@ -1,0 +1,66 @@
+# ==============================================================
+# Spectra 應用設定 — .spectra.yaml
+# 負責「工具怎麼運作」（語言、模式開關、推理強度、worktree…）。
+# 另一個 openspec/config.yaml 負責「AI 寫規格時的背景與規則」（context / rules），別搞混。
+# 官方文件：https://github.com/spectra-app/spectra
+#
+# 本檔是跨專案模板的一部分（與 openspec/config.yaml 一起 copy）：
+#   ✏️ tdd / audit 兩顆開關 → 逐專案依註解裡的準則決定
+#   ✂️ 其餘全部 → 原樣可攜
+# ==============================================================
+
+# ── spec_dir：openspec 目錄路徑 ──────────────────────────────
+# 預設為 openspec。若改路徑，需重建向量搜尋索引。一般不用動。
+# spec_dir: docs/specs
+
+# ── locale ✂️：AI 產文件的語言 ────────────────────────────────
+# tw = 繁體中文（台灣）。proposal/design/tasks 會用這語言；
+# 但 spec 一律英文（因用 SHALL/WHEN/THEN 規範語言），這是 Spectra 硬規則。
+locale: tw
+
+# ── 工作流程開關（Workflow toggles）──────────────────────────
+
+# tdd ✏️：apply「測試先行」——每個任務先寫失敗測試再實作。
+# 準則：會長期發展、有實際邏輯的專案 → 開；純骨架/示範/throwaway → 關。
+# 本專案開啟：要走到 THAS 上架的長期專案，且 mvvmc-testing 讓測試成本很低
+# （doAction 直接注入結果、不需要 mock）。目前已有 42 個測試在跑。
+tdd: true
+
+# audit ✏️：apply 套「安全利刃」檢查（危險預設/型別混淆/靜默失敗）。
+# 準則：有安全表面（金流、權限、server 寫入、個資）→ 開；否則關——
+# 每次 apply 會多付一輪 xhigh 審查成本，無安全表面時價值趨近於零。
+# 本專案開啟：安全表面明確——OAuth 憑證處理（PKCE、state 驗證、Keychain 存取權限）
+# 加上病歷個資（PHI）。醫療資料是最敏感的個資，而 auth 實作的錯誤（漏驗 state、
+# token 存錯 accessibility）不會在功能測試中現形。代價是每次 apply 多一輪審查。
+audit: true
+
+# parallel_tasks ✂️：獨立任務（改不同檔）平行實作，功能變多後 apply 明顯變快。
+# 低風險（環境不支援並行時會自動忽略 [P]）。
+parallel_tasks: true
+
+# claude_slash_commands ✂️：額外產生 /spectra:X 指令別名。
+# 不需要多一套指令別名，維持關閉。
+# claude_slash_commands: true
+
+# ── worktree ✂️：每個 change 用獨立 git worktree 隔離 ──────────
+# 單人循序開發用不到，維持關閉；多 change 平行開發時再開。
+# worktree: true
+# worktrees_dir: .spectra/worktrees
+
+# ── claude_effort ✂️：各 skill 的推理強度（low/medium/high/xhigh/max）─
+# 依「值不值得花算力」分別調：越重要/越難的階段給越高，機械階段給低省成本。
+claude_effort:
+  apply: xhigh      # 實作最關鍵 → 最高強度
+  propose: xhigh    # 規劃需要縝密 → 最高
+  ingest: xhigh     # 更新需理解既有脈絡 → 最高
+  debug: xhigh      # 除錯要深推理 → 最高
+  audit: xhigh      # 安全審查要仔細 → 最高
+  discuss: medium   # 討論適中即可
+  archive: low      # 歸檔很機械 → 低，省成本
+  ask: low          # 查詢問答 → 低
+
+# ── tools ✂️：要產生指示檔的 AI 工具 ──────────────────────────
+# 決定 init/update 幫哪些工具產生指示檔（如 CLAUDE.md、Cursor 規則）。
+tools:
+  - claude
+  # - cursor
