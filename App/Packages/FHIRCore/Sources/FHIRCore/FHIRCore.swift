@@ -20,6 +20,7 @@ public enum FHIR {
 
     public typealias Resource = ModelsR4.Resource
     public typealias Bundle = ModelsR4.Bundle
+    public typealias BundleEntry = ModelsR4.BundleEntry
     public typealias OperationOutcome = ModelsR4.OperationOutcome
 
     // MARK: - MVP 用到的 resource

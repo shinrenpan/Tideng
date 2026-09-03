@@ -110,7 +110,7 @@ struct MainViewModelTests {
       "entry": [ { "resource": { "resourceType": "Patient", "id": "p1" } } ] }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(TestSupport.response(bundle)))))
 
     #expect(viewModel.state.slices[.all]?.status == .success)
     for slice in MainViewModel.PatientSlice.allCases where slice != .all {
@@ -125,9 +125,9 @@ struct MainViewModelTests {
     { "resourceType": "Bundle", "type": "searchset", "total": 7 }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(bundle))))
-    await viewModel.doAction(.apiResponse(.sliceCount(.seenToday, .success(bundle))))
-    await viewModel.doAction(.apiResponse(.sliceCount(.onMedication, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(TestSupport.response(bundle)))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.seenToday, .success(TestSupport.response(bundle)))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.onMedication, .success(TestSupport.response(bundle)))))
     await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .failure(.transport(message: "timeout")))))
 
     #expect(viewModel.state.slices[.all]?.status == .success)
@@ -196,7 +196,7 @@ struct MainViewModelTests {
       "entry": [ { "resource": { "resourceType": "Patient", "id": "p1" } } ] }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(TestSupport.response(bundle)))))
 
     #expect(viewModel.state.slices[.all]?.count == .exact(38))
   }
@@ -215,7 +215,7 @@ struct MainViewModelTests {
       ] }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(TestSupport.response(bundle)))))
 
     #expect(viewModel.state.slices[.all]?.count == .atLeast(2))
   }
@@ -228,7 +228,7 @@ struct MainViewModelTests {
       "entry": [ { "resource": { "resourceType": "Patient", "id": "p1" } } ] }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(TestSupport.response(bundle)))))
 
     #expect(viewModel.state.slices[.all]?.count == .exact(1))
   }
@@ -259,7 +259,7 @@ struct MainViewModelTests {
       ] }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.seenToday, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.seenToday, .success(TestSupport.response(bundle)))))
 
     #expect(viewModel.state.slices[.seenToday]?.count == .exact(2))
   }
@@ -279,7 +279,7 @@ struct MainViewModelTests {
       ] }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.onMedication, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.onMedication, .success(TestSupport.response(bundle)))))
 
     #expect(viewModel.state.slices[.onMedication]?.count == .exact(1))
   }
@@ -307,7 +307,7 @@ struct MainViewModelTests {
       ] }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .success(TestSupport.response(bundle)))))
 
     // p1 超出；p2 在範圍內；p3 數值很高但 server 沒給範圍——不判讀，不計入
     #expect(viewModel.state.slices[.outOfRange]?.count == .exact(1))
@@ -326,9 +326,71 @@ struct MainViewModelTests {
       ] }
     """)
 
-    await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .success(bundle))))
+    await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .success(TestSupport.response(bundle)))))
 
     #expect(viewModel.state.slices[.outOfRange]?.count == .exact(0))
     #expect(viewModel.state.slices[.outOfRange]?.status == .success)
+  }
+}
+
+// MARK: - 部分解碼
+
+@MainActor
+struct MainViewModelPartialDecodeTests {
+
+  private func makeViewModel() throws -> MainViewModel {
+    MainViewModel(
+      client: try TestSupport.makeClient(),
+      tokenStore: try TestSupport.makeTokenStore(),
+      serverHost: "example.org"
+    )
+  }
+
+  @Test
+  func `去重推導的計數在有 entry 被跳過時降級為下限值`() async throws {
+    let viewModel = try makeViewModel()
+    let bundle = try TestSupport.bundle("""
+    { "resourceType": "Bundle", "type": "searchset",
+      "entry": [
+        { "resource": { "resourceType": "Encounter", "id": "e1", "status": "in-progress",
+                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p1" } } }
+      ] }
+    """)
+
+    await viewModel.doAction(.apiResponse(.sliceCount(.seenToday, .success(
+      TestSupport.response(bundle, skipped: 9)
+    ))))
+
+    #expect(viewModel.state.slices[.seenToday]?.count == .atLeast(1))
+  }
+
+  @Test
+  func `server 給的 total 不因本地解碼失敗而降級`() async throws {
+    // total 講的是 server 有多少資料，不是我們解得開多少。
+    let viewModel = try makeViewModel()
+    let bundle = try TestSupport.bundle("""
+    { "resourceType": "Bundle", "type": "searchset", "total": 307,
+      "entry": [ { "resource": { "resourceType": "Patient", "id": "p1" } } ] }
+    """)
+
+    await viewModel.doAction(.apiResponse(.sliceCount(.all, .success(
+      TestSupport.response(bundle, skipped: 1)
+    ))))
+
+    #expect(viewModel.state.slices[.all]?.count == .exact(307))
+  }
+
+  @Test
+  func `全部 entry 都解不出來時報為不可用而非零`() async throws {
+    // 報 0 會與「這個 server 真的沒有」無從分辨。
+    let viewModel = try makeViewModel()
+    let empty = try TestSupport.bundle(#"{ "resourceType": "Bundle", "type": "searchset" }"#)
+
+    await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .success(
+      TestSupport.response(empty, skipped: 12)
+    ))))
+
+    #expect(viewModel.state.slices[.outOfRange]?.status == .unavailable)
+    #expect(viewModel.state.slices[.outOfRange]?.count == nil)
   }
 }

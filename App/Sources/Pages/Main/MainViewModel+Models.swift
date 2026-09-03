@@ -139,12 +139,15 @@ extension MainViewModel.SliceCount {
   ///
   /// 三個切片都必須依 subject 去重——一位病人可能有多次就診、多筆用藥、多筆觀測值，
   /// 而卡片說的是「幾位病人」不是「幾筆紀錄」。
-  static func make(from bundle: FHIR.Bundle, slice: MainViewModel.PatientSlice) -> Self {
-    let hasMore = bundle.nextPageURL != nil
+  static func make(from response: FHIRBundleDecoder.Result, slice: MainViewModel.PatientSlice) -> Self {
+    let bundle = response.bundle
+    // 有 entry 被跳過就不能宣稱精確——數字必然少算，只是不知道少多少。
+    let hasMore = bundle.nextPageURL != nil || response.isPartial
 
     switch slice {
     case .all:
       // 病人清單本身就是一筆一位，能拿到 total 就是精確值。
+      // total 是 server 對自己資料的陳述，與本地解碼成敗無關——不因跳過而降級。
       if let total = bundle.searchTotal {
         return .exact(total)
       }

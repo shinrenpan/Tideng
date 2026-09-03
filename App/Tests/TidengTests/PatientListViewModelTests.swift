@@ -35,7 +35,7 @@ struct PatientListViewModelTests {
     let viewModel = try makeViewModel()
     let response = try bundle(#"{"resourceType":"Patient","id":"p1","name":[{"family":"王","given":["小明"]}],"gender":"male"}"#)
 
-    await viewModel.doAction(.apiResponse(.patients(.success(response))))
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(response)))))
 
     #expect(viewModel.state.patients.count == 1)
     #expect(viewModel.state.patients.first?.name == "王小明")
@@ -51,7 +51,7 @@ struct PatientListViewModelTests {
       #"{"resourceType":"Patient"}"#
     )
 
-    await viewModel.doAction(.apiResponse(.patients(.success(response))))
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(response)))))
 
     #expect(viewModel.state.patients.count == 1)
     #expect(viewModel.state.patients.first?.id == "p1")
@@ -60,7 +60,7 @@ struct PatientListViewModelTests {
   @Test
   func `刷新失敗不清空已在畫面上的資料`() async throws {
     let viewModel = try makeViewModel()
-    await viewModel.doAction(.apiResponse(.patients(.success(try bundle(#"{"resourceType":"Patient","id":"p1"}"#)))))
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(try bundle(#"{"resourceType":"Patient","id":"p1"}"#))))))
 
     await viewModel.doAction(.apiResponse(.patients(.failure(.transport(message: "offline")))))
 
@@ -76,10 +76,10 @@ struct PatientListViewModelTests {
   @Test
   func `關鍵字命中姓名`() async throws {
     let viewModel = try makeViewModel()
-    await viewModel.doAction(.apiResponse(.patients(.success(try bundle(
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(try bundle(
       #"{"resourceType":"Patient","id":"p1","name":[{"family":"王","given":["小明"]}]}"#,
       #"{"resourceType":"Patient","id":"p2","name":[{"family":"陳","given":["美玲"]}]}"#
-    )))))
+    ))))))
 
     viewModel.state.keyword = "美玲"
 
@@ -91,10 +91,10 @@ struct PatientListViewModelTests {
   func `關鍵字命中病歷號時該病人仍留在清單`() async throws {
     // 關鍵字沒有出現在姓名裡，只出現在病歷號——護理師常以病歷號找人。
     let viewModel = try makeViewModel()
-    await viewModel.doAction(.apiResponse(.patients(.success(try bundle(
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(try bundle(
       #"{"resourceType":"Patient","id":"p1","name":[{"family":"王","given":["小明"]}],"identifier":[{"value":"A123456"}]}"#,
       #"{"resourceType":"Patient","id":"p2","name":[{"family":"陳","given":["美玲"]}],"identifier":[{"value":"B999999"}]}"#
-    )))))
+    ))))))
 
     viewModel.state.keyword = "A123456"
 
@@ -106,9 +106,9 @@ struct PatientListViewModelTests {
   func `關鍵字無結果時已取得的病人不被清空`() async throws {
     // filteredPatients 為空、patients 仍在——View 才分得出「搜尋無結果」與「伺服器沒資料」。
     let viewModel = try makeViewModel()
-    await viewModel.doAction(.apiResponse(.patients(.success(try bundle(
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(try bundle(
       #"{"resourceType":"Patient","id":"p1","name":[{"family":"王","given":["小明"]}]}"#
-    )))))
+    ))))))
 
     viewModel.state.keyword = "zzz-no-match"
 
@@ -119,10 +119,10 @@ struct PatientListViewModelTests {
   @Test
   func `關鍵字為空時顯示全部`() async throws {
     let viewModel = try makeViewModel()
-    await viewModel.doAction(.apiResponse(.patients(.success(try bundle(
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(try bundle(
       #"{"resourceType":"Patient","id":"p1"}"#,
       #"{"resourceType":"Patient","id":"p2"}"#
-    )))))
+    ))))))
 
     viewModel.state.keyword = ""
 
@@ -181,7 +181,7 @@ struct PatientListViewModelTests {
       #"{"resourceType":"Patient","id":"p1","name":[{"family":"林","given":["建宏"]}]}"#
     )
 
-    await viewModel.doAction(.apiResponse(.patients(.success(response))))
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(response)))))
 
     #expect(viewModel.state.patients.count == 1)
     #expect(viewModel.state.patients.first?.name == "林建宏")
@@ -197,7 +197,7 @@ struct PatientListViewModelTests {
       #"{"resourceType":"Patient","id":"p2","name":[{"family":"陳","given":["美玲"]}]}"#
     )
 
-    await viewModel.doAction(.apiResponse(.patients(.success(response))))
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(response)))))
 
     // p2 的體溫在範圍內，雖然它的 Patient 也被 include 夾帶回來，仍不該出現在清單裡
     #expect(viewModel.state.patients.count == 1)
@@ -212,7 +212,7 @@ struct PatientListViewModelTests {
       #"{"resourceType":"Patient","id":"p1"}"#
     )
 
-    await viewModel.doAction(.apiResponse(.patients(.success(response))))
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(response)))))
 
     // 41.0 看起來很高，但 server 沒給範圍——判斷它異常就是臨床判讀
     #expect(viewModel.state.patients.isEmpty)
@@ -257,7 +257,7 @@ struct PatientListPresentationTests {
     let viewModel = try makeViewModel()
     let empty = try TestSupport.bundle(#"{ "resourceType": "Bundle", "type": "searchset" }"#)
 
-    await viewModel.doAction(.apiResponse(.patients(.success(empty))))
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(empty)))))
 
     #expect(viewModel.state.patients.isEmpty)
     #expect(viewModel.state.api.loadPatients == .success)

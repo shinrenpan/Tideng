@@ -91,3 +91,12 @@ final class RouteRecorder<Route> {
     routes.append(route)
   }
 }
+
+extension TestSupport {
+
+  /// 把 bundle 包成解碼結果。`skipped` 大於 0 時代表回應不完整，
+  /// 計數應降級為下限值。
+  static func response(_ bundle: FHIR.Bundle, skipped: Int = 0) -> FHIRBundleDecoder.Result {
+    .init(bundle: bundle, skippedEntries: skipped, decodedEntries: bundle.entry?.count ?? 0)
+  }
+}

@@ -108,6 +108,38 @@ The out-of-range slice SHALL classify an observation as outside its reference ra
 - **WHEN** no observation in the response carries a reference range
 - **THEN** the out-of-range card shows a count of zero rather than an error
 
+### Requirement: A malformed entry must not discard the whole response
+
+The app SHALL tolerate individual resources that fail to decode, because real FHIR servers
+return data that does not conform to the specification. A response SHALL be considered usable
+as long as at least part of it decodes. A count derived by counting decoded entries SHALL be
+reported as a lower bound whenever any entry was skipped; a count taken from a
+server-reported total SHALL NOT, because that total describes what the server holds rather
+than what this client managed to parse.
+
+#### Scenario: One malformed resource among many
+
+- **WHEN** a response contains 307 resources and one of them fails to decode
+- **THEN** the remaining 306 are used, and the count for that slice is presented as a lower bound
+
+#### Scenario: Entry-derived counts stay honest about being incomplete
+
+- **WHEN** a slice count is obtained by counting decoded entries and any entry was skipped
+- **THEN** the count is marked as a lower bound rather than presented as exact, so the
+  displayed number never claims to be a total it cannot guarantee
+
+#### Scenario: A server-reported total survives local decoding failures
+
+- **WHEN** the server reports a total of 307 and one entry fails to decode locally
+- **THEN** the count is still reported as exactly 307, because the total describes the server's
+  data rather than this client's parsing
+
+#### Scenario: Nothing decodes at all
+
+- **WHEN** every entry in a response fails to decode
+- **THEN** the slice reports its count as unavailable rather than reporting zero, because zero
+  would be indistinguishable from "this server genuinely has none"
+
 ### Requirement: Selecting a card opens the corresponding patient list
 
 Selecting a slice card SHALL open the patient list with that slice's filter already applied, and the list SHALL identify which slice is being shown.

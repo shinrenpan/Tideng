@@ -59,8 +59,10 @@ extension MainViewModel {
 
   enum APIResponse: Sendable {
     case identity(Result<IdentityPayload, FHIRClientError>)
-    /// 帶的是 bundle（DTO）而非算好的數字——去重與計數是 `handleAPIResponse` 的責任。
-    case sliceCount(PatientSlice, Result<FHIR.Bundle, FHIRClientError>)
+    /// 帶的是解碼結果（DTO）而非算好的數字——去重與計數是 `handleAPIResponse` 的責任。
+    /// 用 `FHIRBundleDecoder.Result` 而非 `FHIR.Bundle`，是因為「跳過了幾筆」會影響
+    /// 計數能不能宣稱精確。
+    case sliceCount(PatientSlice, Result<FHIRBundleDecoder.Result, FHIRClientError>)
   }
 
   enum Router: Equatable, Sendable {
@@ -115,7 +117,7 @@ private extension MainViewModel {
         async let roles = client.search(.practitionerRoles(practitionerID: id))
         let payload = IdentityPayload(
           practitioner: try await practitioner,
-          roles: try await roles.resources(of: FHIR.PractitionerRole.self)
+          roles: try await roles.bundle.resources(of: FHIR.PractitionerRole.self)
         )
         await doAction(.apiResponse(.identity(.success(payload))))
       } catch let error as FHIRClientError {
@@ -165,8 +167,13 @@ private extension MainViewModel {
 
     case let .sliceCount(slice, result):
       switch result {
-      case let .success(bundle):
-        state.slices[slice] = .init(count: .make(from: bundle, slice: slice), status: .success)
+      case let .success(response):
+        // 全部 entry 都解不出來時不報 0——那與「server 真的沒有」無從分辨。
+        guard !(response.decodedEntries == 0 && response.isPartial) else {
+          state.slices[slice] = .init(count: nil, status: .unavailable)
+          return
+        }
+        state.slices[slice] = .init(count: .make(from: response, slice: slice), status: .success)
       case .failure:
         // 只有這張卡片不可用，其餘不受影響。
         state.slices[slice] = .init(count: nil, status: .unavailable)

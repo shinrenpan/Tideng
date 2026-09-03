@@ -28,16 +28,19 @@ public actor FHIRClient {
 
     // MARK: - 查詢
 
-    public func search(_ search: FHIRSearch) async throws -> FHIR.Bundle {
-        try await fetch(FHIR.Bundle.self, from: url(for: search))
+    /// - Returns: 解碼結果，含因不符 FHIR 規格而被跳過的 entry 數。
+    ///   個別資源不合規時不會讓整批失敗——真實 server 的資料品質參差，
+    ///   一筆壞資料毀掉三百筆好資料是不可接受的。
+    public func search(_ search: FHIRSearch) async throws -> FHIRBundleDecoder.Result {
+        try await fetchBundle(from: url(for: search))
     }
 
     /// 跟隨 server 給的 `next` 連結取下一頁；沒有下一頁時回 `nil`。
     ///
     /// 不自己拼 offset——server 可能是 cursor 分頁。
-    public func nextPage(after bundle: FHIR.Bundle) async throws -> FHIR.Bundle? {
+    public func nextPage(after bundle: FHIR.Bundle) async throws -> FHIRBundleDecoder.Result? {
         guard let next = bundle.nextPageURL else { return nil }
-        return try await fetch(FHIR.Bundle.self, from: next)
+        return try await fetchBundle(from: next)
     }
 
     public func read<T: FHIR.Resource>(_ type: T.Type, id: String) async throws -> T {
@@ -62,7 +65,25 @@ public actor FHIRClient {
         return url
     }
 
+    private func fetchBundle(from url: URL) async throws -> FHIRBundleDecoder.Result {
+        let payload = try await data(from: url)
+        do {
+            return try FHIRBundleDecoder.decode(payload)
+        } catch {
+            throw FHIRClientError.decoding(message: String(describing: error))
+        }
+    }
+
     private func fetch<T: Decodable>(_ type: T.Type, from url: URL) async throws -> T {
+        let payload = try await data(from: url)
+        do {
+            return try decoder.decode(type, from: payload)
+        } catch {
+            throw FHIRClientError.decoding(message: String(describing: error))
+        }
+    }
+
+    private func data(from url: URL) async throws -> Data {
         var request = URLRequest(url: url)
         request.setValue("application/fhir+json", forHTTPHeaderField: "Accept")
         if let token = try await tokenProvider.validToken() {
@@ -85,11 +106,7 @@ public actor FHIRClient {
             throw error(for: http.statusCode, body: data)
         }
 
-        do {
-            return try decoder.decode(type, from: data)
-        } catch {
-            throw FHIRClientError.decoding(message: String(describing: error))
-        }
+        return data
     }
 
     /// 把非 2xx 的回應轉成分類過的錯誤。

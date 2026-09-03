@@ -103,7 +103,7 @@ struct FHIRClientTests {
         StubURLProtocol.stub(body: Fixtures.mixedSearchset)
         let client = try makeClient()
 
-        let bundle = try await client.search(.patients())
+        let bundle = try await client.search(.patients()).bundle
 
         let patients = bundle.resources(of: FHIR.Patient.self)
         let encounters = bundle.resources(of: FHIR.Encounter.self)
@@ -117,10 +117,10 @@ struct FHIRClientTests {
     func followsNextLink() async throws {
         StubURLProtocol.stub(body: Fixtures.mixedSearchset)
         let client = try makeClient()
-        let first = try await client.search(.patients())
+        let first = try await client.search(.patients()).bundle
 
         StubURLProtocol.stub(body: Fixtures.lastPage)
-        let second = try await client.nextPage(after: first)
+        let second = try await client.nextPage(after: first)?.bundle
 
         #expect(second != nil)
         let requestedURL = try #require(StubURLProtocol.lastRequest?.url?.absoluteString)
@@ -131,9 +131,9 @@ struct FHIRClientTests {
     func stopsAtLastPage() async throws {
         StubURLProtocol.stub(body: Fixtures.lastPage)
         let client = try makeClient()
-        let bundle = try await client.search(.patients())
+        let bundle = try await client.search(.patients()).bundle
 
-        let next = try await client.nextPage(after: bundle)
+        let next = try await client.nextPage(after: bundle)?.bundle
         #expect(next == nil)
     }
 
