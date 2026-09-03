@@ -111,20 +111,18 @@ private extension MainViewModel {
       // 先放上 reference——就算兩支查詢都失敗，header 也不會是空的。
       state.practitioner = .init(reference: reference)
 
-      do {
-        // 兩支互不相干，併發送出。
-        async let practitioner = client.read(FHIR.Practitioner.self, id: id)
-        async let roles = client.search(.practitionerRoles(practitionerID: id))
-        let payload = IdentityPayload(
-          practitioner: try await practitioner,
-          roles: try await roles.bundle.resources(of: FHIR.PractitionerRole.self)
-        )
-        await doAction(.apiResponse(.identity(.success(payload))))
-      } catch let error as FHIRClientError {
-        await doAction(.apiResponse(.identity(.failure(error))))
-      } catch {
-        await doAction(.apiResponse(.identity(.failure(.transport(message: String(describing: error))))))
-      }
+      // 兩支併發送出，而且**各自**容錯。
+      //
+      // 不能綁在同一個 do-catch：PractitionerRole 在某些 server 上根本不存在
+      // （Siming 就沒有，會回 404），那不該連帶讓姓名也顯示不出來。
+      async let practitioner = try? client.read(FHIR.Practitioner.self, id: id)
+      async let roles = try? client.search(.practitionerRoles(practitionerID: id))
+
+      let payload = IdentityPayload(
+        practitioner: await practitioner,
+        roles: await roles?.bundle.resources(of: FHIR.PractitionerRole.self) ?? []
+      )
+      await doAction(.apiResponse(.identity(.success(payload))))
 
     case let .loadSliceCount(slice):
       state.slices[slice]?.status = .loading

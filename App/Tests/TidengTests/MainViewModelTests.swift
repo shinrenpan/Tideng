@@ -420,3 +420,39 @@ struct SliceCountSemanticsTests {
     #expect(noInformation != .exact(0))
   }
 }
+
+// MARK: - 身分查詢的獨立容錯
+
+@MainActor
+struct PractitionerIdentityResilienceTests {
+
+  @Test
+  func `server 沒有 PractitionerRole 時姓名仍然顯示`() throws {
+    // Siming 不支援 PractitionerRole（打過去 404）。那支查詢失敗不該讓姓名一起消失——
+    // 兩者綁在同一個 do-catch 曾經導致這個結果。
+    let practitioner = try TestSupport.decode(FHIR.Practitioner.self, """
+    { "resourceType": "Practitioner", "id": "137594487",
+      "name": [{ "family": "王", "given": ["大明"] }] }
+    """)
+
+    let identity = MainViewModel.PractitionerIdentity(
+      reference: "Practitioner/137594487",
+      payload: .init(practitioner: practitioner, roles: [])
+    )
+
+    #expect(identity.name == "王大明")
+    #expect(identity.role == nil)
+    #expect(identity.displayName == "王大明")
+  }
+
+  @Test
+  func `姓名查詢失敗但有角色時仍退回 reference`() {
+    let identity = MainViewModel.PractitionerIdentity(
+      reference: "Practitioner/137594487",
+      payload: .init(practitioner: nil, roles: [])
+    )
+
+    #expect(identity.name == nil)
+    #expect(identity.displayName == "Practitioner/137594487")
+  }
+}
