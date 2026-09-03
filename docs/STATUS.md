@@ -1,6 +1,6 @@
 # 現況
 
-*更新於 2026-09-03*
+*更新於 2026-09-04*
 
 第一個 PoC 已完成並實際跑通：**輸入任意 FHIR base URL → SMART standalone 登入 → 側邊欄
 主畫面 + 病人清單**。登入不是模擬的——`Practitioner` reference 由 `id_token` 的 `fhirUser`
@@ -43,8 +43,14 @@ demo 階段只能靠 Siming 或公開 sandbox。
 | SMART：discovery、能力檢查、PKCE、`state`、`aud`、token 交換、refresh 序列化、Keychain、瀏覽器授權 | `App/Packages/SmartAuth`（31 個測試） |
 | 登入畫面（base URL + preset + 進階 client_id） | `Sources/Pages/ServerSetup` |
 | 側邊欄主畫面（`NavigationSplitView`） | `Sources/Pages/Main` |
-| 病人清單（真實資料、搜尋、四態、下拉刷新） | `Sources/Pages/PatientList` |
+| 病人清單（真實資料、切片、搜尋、四態、下拉刷新） | `Sources/Pages/PatientList` |
+| 主畫面兩層導航：身分 header、大分類、病人切片 grid 與計數 | `Sources/Pages/Main` |
 | 本機 SMART launcher | `Server/docker-compose.yml` |
+
+Spectra 的第一個 change `main-navigation` 已完成並歸檔，產出兩個正式 capability
+（`clinical-dashboard`、`patient-list`，共 13 條 requirement、40 個 scenario）。
+其中兩條是這個產品的法規界線，現在寫在正式規格裡而非埋在某個 change 目錄：
+**使用者可見文字只陳述事實不做判讀**、**超出參考值只採用 server 提供的 referenceRange**。
 
 測試裡值得一提的三個：PKCE 用 **RFC 7636 附錄 B 的官方測試向量**驗證（證明符合規格而非
 自洽）；`aud` 參數有獨立測試（SMART 最常被漏、漏了部分 server 直接拒絕）；**10 個並發請求
@@ -61,11 +67,23 @@ demo 階段只能靠 Siming 或公開 sandbox。
 尚未驗證的反方向：**無授權會被拒絕**。launcher 在完全不帶 token 時放行（開發模式），
 要驗證強制授權得等 Phase B 接上 Siming，或用 launcher 的 `auth_error` 模擬。
 
+### 實作中撞到的真實問題
+
+**一筆不合規的資料會毀掉整批回應。** FHIR R4 要求 `dateTime` 帶了時分秒就必須帶時區，
+而 HAPI 公開 server 的資料大量違反這條。FHIRModels 嚴格照規格解析，於是整個 Bundle 拋錯——
+實測 MedicationRequest 查詢是 **1/307 筆**壞資料毀掉另外 306 筆。
+
+對一個主打「連得上任何 FHIR server」的 app，這不是邊緣案例而是常態。現在改為逐筆容錯解碼，
+並把跳過的筆數反映在計數的精確性上（降級為下限值）。這件事在接真實醫院資料時只會更嚴重。
+
 ## 3. 還沒做的
 
-- 病人詳情 + 生命徵象趨勢圖 ← **下一步**
-- 版面粗糙處：搜尋框飄在右上角、清單列太寬、側邊欄兩項標著「待實作」
-- Siming 接上（Phase B）、TW Core 驗證
+- Siming 接上（Phase B）+ 台灣 seed 資料 ← **下一步**。現在「超出參考值」永遠顯示 `—`，
+  因為 HAPI 的 Observation 幾乎不帶 `referenceRange`；而 `<PID.5.2>DANA</PID.5.2>` 那種
+  髒資料拿給診所看會扣分
+- 病人詳情 + 生命徵象趨勢圖（需要 seed 的時序資料才看得出效果）
+- 版面粗糙處：搜尋框飄在右上角、清單列太寬
+- TW Core 驗證
 - 寫入路徑、離線佇列、給藥核對、AuditEvent、session 安全（背景遮罩 / 閒置鎖定）
 - MDM Managed App Configuration ← 機構透過 THAS 訂閱時會需要
 - IAP 的 feature-gating 介面
@@ -127,6 +145,7 @@ launcher base URL 的 `sim` 段）記在 [`../App/CLAUDE.md`](../App/CLAUDE.md)�
 
 ## 6. 下一步
 
-1. 病人詳情 + 生命徵象趨勢圖（Swift Charts）——dashboard 真正的賣點
-2. 修上述版面粗糙處
-3. Siming 接上（Phase B），跑 TECH-SPEC §6 的缺口檢查
+1. **Siming 接上 + 台灣 seed 資料**——順序刻意排在趨勢圖之前：趨勢圖要有 48 小時的時序
+   資料才看得出效果，而那要靠 seed；反過來做的話，圖會畫在一堆 `????? ???????` 上
+2. 病人詳情 + 生命徵象趨勢圖（Swift Charts）——dashboard 真正的賣點
+3. 修版面粗糙處
