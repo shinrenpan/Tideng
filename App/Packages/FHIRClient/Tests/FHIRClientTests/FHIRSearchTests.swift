@@ -57,7 +57,10 @@ struct FHIRSearchTests {
         let search = FHIRSearch.activeMedicationRequests()
 
         #expect(search.resourceType == "MedicationRequest")
-        #expect(query(search)["status"] == "active")
+        let parameters = query(search)
+        #expect(parameters["status"] == "active")
+        // 病人清單要顯示 Patient 本身，不只是 reference
+        #expect(parameters["_include"] == "MedicationRequest:subject")
     }
 
     @Test("近 24 小時的生命徵象帶時間窗與取樣上限")
@@ -69,6 +72,7 @@ struct FHIRSearchTests {
         #expect(parameters["category"] == "vital-signs")
         // 24 小時前：2026-09-02T12:00:00Z
         #expect(parameters["date"] == "ge2026-09-02T12:00:00Z")
+        #expect(parameters["_include"] == "Observation:subject")
         // design 定的取樣上限——沒有它，資料量大的 server 會拖垮這個切片
         #expect(parameters["_count"] == "500")
     }

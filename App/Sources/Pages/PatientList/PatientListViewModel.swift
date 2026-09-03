@@ -11,8 +11,10 @@ final class PatientListViewModel {
   @ObservationIgnored
   private let client: FHIRClient
 
-  init(client: FHIRClient) {
+  /// - Parameter sliceIdentifier: 主畫面傳來的切片識別碼（primitive，不是 Domain Model）。
+  init(client: FHIRClient, sliceIdentifier: String = PatientListViewModel.Slice.all.rawValue) {
     self.client = client
+    self.state.slice = .init(identifier: sliceIdentifier)
   }
 
   func doAction(_ action: Action) async {
@@ -48,8 +50,9 @@ extension PatientListViewModel {
   }
 
   enum APIResponse: Sendable {
-    /// 帶的是 FHIR resource（DTO）而不是 Domain Model——翻譯是 `handleAPIResponse` 的責任。
-    case patients(Result<[FHIR.Patient], FHIRClientError>)
+    /// 帶的是整個 bundle（DTO）而不是 Domain Model——挑出病人與翻譯都是
+    /// `handleAPIResponse` 的責任。切片不同，挑法也不同。
+    case patients(Result<FHIR.Bundle, FHIRClientError>)
   }
 }
 
@@ -79,9 +82,8 @@ private extension PatientListViewModel {
     case .loadPatients:
       state.api.loadPatients = .loading
       do {
-        let bundle = try await client.search(.patients())
-        let resources = bundle.resources(of: FHIR.Patient.self)
-        await doAction(.apiResponse(.patients(.success(resources))))
+        let bundle = try await client.search(state.slice.search)
+        await doAction(.apiResponse(.patients(.success(bundle))))
       } catch let error as FHIRClientError {
         await doAction(.apiResponse(.patients(.failure(error))))
       } catch {
@@ -99,9 +101,9 @@ private extension PatientListViewModel {
     switch response {
     case let .patients(result):
       switch result {
-      case let .success(resources):
+      case let .success(bundle):
         // 沒有 id 的 resource 進不了 Domain Model，直接濾掉——那種資料 UI 也定位不到。
-        state.patients = resources.compactMap(Patient.init(resource:))
+        state.patients = state.slice.patients(from: bundle).compactMap(Patient.init(resource:))
         state.api.loadPatients = .success
 
       case let .failure(error):

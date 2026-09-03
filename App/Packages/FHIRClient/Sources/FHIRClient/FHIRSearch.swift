@@ -101,12 +101,17 @@ public extension FHIRSearch {
         )
     }
 
-    /// 進行中的用藥請求。
+    /// 進行中的用藥請求，並帶回病人本身。
+    ///
+    /// `_include` 是為了讓病人清單能直接顯示 Patient；計數只需要 subject reference，
+    /// 但 `_include` 的資源不計入 `_count`（FHIR 規定 `_count` 只算 match），
+    /// 所以兩種用途可以共用同一條查詢。
     static func activeMedicationRequests(count: Int = 200) -> FHIRSearch {
         FHIRSearch(
             resourceType: "MedicationRequest",
             parameters: [
                 .init("status", "active"),
+                .init("_include", "MedicationRequest:subject"),
                 .init("_count", String(count))
             ]
         )
@@ -128,6 +133,7 @@ public extension FHIRSearch {
             parameters: [
                 .init("category", ObservationCategory.vitalSigns),
                 .init("date", "ge\(Self.instant(since))"),
+                .init("_include", "Observation:subject"),
                 .init("_count", String(count))
             ]
         )

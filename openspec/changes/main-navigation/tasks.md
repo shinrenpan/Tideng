@@ -23,9 +23,9 @@
 
 ## 5. 病人清單接受切片
 
-- [ ] 5.1 病人清單依傳入的切片識別碼決定查詢條件，且以 primitive 跨越 feature 邊界（不接收任何 Domain Model）。滿足 Requirement: Patient list queries by slice。落實 design 決策「切片以 primitive 跨越 feature 邊界」。驗證：TidengTests 對四個切片各斷言 ViewModel 發出的查詢條件正確，並斷言 HostController 的建構參數皆為 primitive
-- [ ] 5.2 清單標題指明當前切片，關鍵字可同時比對姓名與病歷號且無結果時顯示搜尋無結果而非清空既有資料。滿足 Requirement: Patient list filters by keyword。驗證：TidengTests 斷言四個切片的標題各不相同、關鍵字分別命中姓名與病歷號；並以 Preview 確認無結果時的呈現
-- [ ] 5.3 既有的四態呈現與病人列欄位在改為切片查詢後仍符合規格。滿足 Requirement: Patient list presents four states in the correct order 與 Requirement: Patient rows present identity without interpretation。驗證：TidengTests 涵蓋首次載入中、載入成功但無資料、已有內容時刷新失敗、首次載入失敗四種情境；並斷言部分精度生日（僅年、僅年月）與缺姓名、缺病歷號時的呈現
+- [x] 5.1 病人清單依傳入的切片識別碼決定查詢條件，且以 primitive 跨越 feature 邊界（不接收任何 Domain Model）。滿足 Requirement: Patient list queries by slice。落實 design 決策「切片以 primitive 跨越 feature 邊界」。驗證：TidengTests 對四個切片各斷言 ViewModel 發出的查詢條件正確，並斷言 HostController 的建構參數皆為 primitive
+- [x] 5.2 清單標題指明當前切片，關鍵字可同時比對姓名與病歷號且無結果時顯示搜尋無結果而非清空既有資料。滿足 Requirement: Patient list filters by keyword。驗證：TidengTests 斷言關鍵字分別命中姓名與病歷號、且無結果時 patients 不被清空；標題屬 V 層的 display helper（規範要求 private，單元測試取不到），以四個切片各一個 Preview 確認文案不同
+- [x] 5.3 既有的四態呈現與病人列欄位在改為切片查詢後仍符合規格。滿足 Requirement: Patient list presents four states in the correct order 與 Requirement: Patient rows present identity without interpretation。驗證：TidengTests 涵蓋首次載入中、載入成功但無資料、已有內容時刷新失敗、首次載入失敗四種情境；並斷言部分精度生日（僅年、僅年月）與缺姓名、缺病歷號時的呈現
 
 ## 6. 文案與整體驗證
 

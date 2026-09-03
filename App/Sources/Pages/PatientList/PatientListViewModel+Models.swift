@@ -1,5 +1,6 @@
 import Foundation
 import FHIRCore
+import FHIRClient
 
 // MARK: - State
 
@@ -7,6 +8,7 @@ extension PatientListViewModel {
 
   struct State: Equatable, Sendable {
     var isFirstAppear: Bool = true
+    var slice: Slice = .all
     var patients: [Patient] = []
     var keyword: String = ""
     var api: API = .init()
@@ -36,6 +38,23 @@ extension PatientListViewModel {
 
 extension PatientListViewModel {
 
+  /// 這份清單顯示哪一群病人。
+  ///
+  /// 與主畫面的切片一一對應，但各自定義——跨 feature 傳的是字串識別碼，
+  /// 兩邊都不必認識對方的型別。
+  enum Slice: String, Sendable, CaseIterable {
+    case all
+    case seenToday
+    case outOfRange
+    case onMedication
+
+    /// 識別碼來自 app 內部（主畫面切片的 rawValue），不是外部輸入。
+    /// 萬一對不上就退回全部病人——顯示全部比顯示空白或崩潰對使用者有用。
+    init(identifier: String) {
+      self = Slice(rawValue: identifier) ?? .all
+    }
+  }
+
   struct Patient: Identifiable, Equatable, Sendable {
     let id: String
     var name: String
@@ -46,9 +65,13 @@ extension PatientListViewModel {
     var recordNumber: String?
 
     /// 足歲。生日精度不足到無法判斷時回 `nil`。
-    var age: Int? {
+    var age: Int? { age(asOf: .now) }
+
+    /// 可注入基準日的版本。`var age` 用當下時間，測試用固定日期——
+    /// 否則年齡的斷言會隨執行日期漂移。
+    func age(asOf now: Date, calendar: Calendar = .current) -> Int? {
       guard let birthDate, let year = birthDate.year else { return nil }
-      let today = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+      let today = calendar.dateComponents([.year, .month, .day], from: now)
       guard let thisYear = today.year else { return nil }
 
       var age = thisYear - year
@@ -112,6 +135,48 @@ extension PatientListViewModel.PatientGender {
     case .female: self = .female
     case .other: self = .other
     case .unknown, .none: self = .unknown
+    }
+  }
+}
+
+// MARK: - 切片 → 查詢與取值
+
+extension PatientListViewModel.Slice {
+
+  var search: FHIRSearch {
+    switch self {
+    case .all: .patients()
+    case .seenToday: .encountersToday()
+    case .outOfRange: .recentVitalSigns()
+    case .onMedication: .activeMedicationRequests()
+    }
+  }
+
+  /// 從回應中取出這個切片要顯示的病人。
+  ///
+  /// 除了 `all` 之外，病人都是透過 `_include` 夾帶回來的——查詢的主體是就診、
+  /// 用藥或觀測值，病人是附帶的。`outOfRange` 還要多一步：先挑出真正落在
+  /// server 提供範圍之外的觀測值，再回頭取它們的病人。
+  func patients(from bundle: FHIR.Bundle) -> [FHIR.Patient] {
+    let included = bundle.resources(of: FHIR.Patient.self)
+
+    switch self {
+    case .all:
+      return included
+
+    case .seenToday, .onMedication:
+      return included
+
+    case .outOfRange:
+      let references = Set(
+        bundle.resources(of: FHIR.Observation.self)
+          .filter { $0.referenceRangeStatus == .outside }
+          .compactMap { $0.subject?.reference?.value?.string }
+      )
+      return included.filter { patient in
+        guard let id = patient.id?.value?.string else { return false }
+        return references.contains("Patient/\(id)")
+      }
     }
   }
 }

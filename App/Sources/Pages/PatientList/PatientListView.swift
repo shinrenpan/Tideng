@@ -2,6 +2,19 @@ import SwiftUI
 
 // MARK: - Display Helpers
 
+private extension PatientListViewModel.Slice {
+
+  /// 清單標題。切片名稱一律陳述事實——「超出參考值」而不是「異常」。
+  var title: String {
+    switch self {
+    case .all: String(localized: "Patients")
+    case .seenToday: String(localized: "Seen Today")
+    case .outOfRange: String(localized: "Outside Reference Range")
+    case .onMedication: String(localized: "On Medication")
+    }
+  }
+}
+
 // 「性別要顯示成什麼圖示、什麼文字」是 V 層的決策，Domain Model 只帶語意。
 private extension PatientListViewModel.PatientGender {
 
@@ -33,7 +46,7 @@ struct PatientListView: View {
     @Bindable var bVM = viewModel
 
     content()
-      .navigationTitle("Patients")
+      .navigationTitle(viewModel.state.slice.title)
       .searchable(text: $bVM.state.keyword, prompt: "Name or record number")
       .refreshable { await viewModel.doAction(.view(.pullToRefresh)) }
       .task { await viewModel.doAction(.view(.isFirstAppear)) }
@@ -129,6 +142,39 @@ private extension PatientListView {
   let vm = PatientListViewModel(client: .preview)
   vm.state.isFirstAppear = false
   vm.state.patients = PatientListViewModel.Patient.mocks
+  vm.state.api.loadPatients = .success
+  return NavigationStack { PatientListView(viewModel: vm) }
+}
+
+#Preview("Seen today") {
+  let vm = PatientListViewModel(client: .preview, sliceIdentifier: "seenToday")
+  vm.state.isFirstAppear = false
+  vm.state.patients = PatientListViewModel.Patient.mocks
+  vm.state.api.loadPatients = .success
+  return NavigationStack { PatientListView(viewModel: vm) }
+}
+
+#Preview("Outside reference range") {
+  let vm = PatientListViewModel(client: .preview, sliceIdentifier: "outOfRange")
+  vm.state.isFirstAppear = false
+  vm.state.patients = PatientListViewModel.Patient.mocks
+  vm.state.api.loadPatients = .success
+  return NavigationStack { PatientListView(viewModel: vm) }
+}
+
+#Preview("On medication") {
+  let vm = PatientListViewModel(client: .preview, sliceIdentifier: "onMedication")
+  vm.state.isFirstAppear = false
+  vm.state.patients = PatientListViewModel.Patient.mocks
+  vm.state.api.loadPatients = .success
+  return NavigationStack { PatientListView(viewModel: vm) }
+}
+
+#Preview("No search result") {
+  let vm = PatientListViewModel(client: .preview)
+  vm.state.isFirstAppear = false
+  vm.state.patients = PatientListViewModel.Patient.mocks
+  vm.state.keyword = "zzz-no-match"
   vm.state.api.loadPatients = .success
   return NavigationStack { PatientListView(viewModel: vm) }
 }
