@@ -17,8 +17,8 @@ struct PatientListViewModelTests {
     try JSONDecoder().decode(FHIR.Patient.self, from: Data(json.utf8))
   }
 
-  @Test("初始狀態未載入任何資料")
-  func initialState() throws {
+  @Test
+  func `初始狀態未載入任何資料`() throws {
     let viewModel = try makeViewModel()
 
     #expect(viewModel.state.isFirstAppear)
@@ -26,8 +26,8 @@ struct PatientListViewModelTests {
     #expect(viewModel.state.api.loadPatients == .prepare)
   }
 
-  @Test("注入成功回應後，DTO 轉成 Domain Model 寫進 state")
-  func adoptsPatientsFromResponse() async throws {
+  @Test
+  func `注入成功回應後 DTO 轉成 Domain Model 寫進 state`() async throws {
     let viewModel = try makeViewModel()
     let patient = try decodePatient("""
     {"resourceType":"Patient","id":"p1","name":[{"family":"王","given":["小明"]}],"gender":"male"}
@@ -41,8 +41,8 @@ struct PatientListViewModelTests {
     #expect(viewModel.state.api.loadPatients == .success)
   }
 
-  @Test("沒有 id 的資源被濾掉——UI 無法定位它")
-  func dropsResourcesWithoutID() async throws {
+  @Test
+  func `沒有 id 的資源被濾掉因為 UI 無法定位它`() async throws {
     let viewModel = try makeViewModel()
     let withID = try decodePatient(#"{"resourceType":"Patient","id":"p1"}"#)
     let withoutID = try decodePatient(#"{"resourceType":"Patient"}"#)
@@ -53,8 +53,8 @@ struct PatientListViewModelTests {
     #expect(viewModel.state.patients.first?.id == "p1")
   }
 
-  @Test("刷新失敗不清空已在畫面上的資料")
-  func failureKeepsExistingContent() async throws {
+  @Test
+  func `刷新失敗不清空已在畫面上的資料`() async throws {
     let viewModel = try makeViewModel()
     let patient = try decodePatient(#"{"resourceType":"Patient","id":"p1"}"#)
     await viewModel.doAction(.apiResponse(.patients(.success([patient]))))

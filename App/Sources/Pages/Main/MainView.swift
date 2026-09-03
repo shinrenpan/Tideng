@@ -2,21 +2,17 @@ import SwiftUI
 
 // MARK: - Display Helpers
 
-private extension MainViewModel.MenuItem {
+private extension MainViewModel.Category {
 
   var title: String {
     switch self {
     case .patients: String(localized: "Patients")
-    case .tasks: String(localized: "Today's Tasks")
-    case .vitals: String(localized: "Vital Signs")
     }
   }
 
   var symbolName: String {
     switch self {
     case .patients: "person.2.fill"
-    case .tasks: "checklist"
-    case .vitals: "waveform.path.ecg"
     }
   }
 }
@@ -33,10 +29,10 @@ struct MainView: View {
   var body: some View {
     NavigationSplitView {
       SidebarSection(
-        items: viewModel.state.menuItems,
-        selection: viewModel.state.selection,
+        categories: MainViewModel.Category.allCases,
+        selection: .patients,
         serverHost: viewModel.state.serverHost,
-        practitionerReference: viewModel.state.practitionerReference,
+        practitioner: viewModel.state.practitioner,
         send: handleSidebarAction
       )
     } detail: {
@@ -47,24 +43,15 @@ struct MainView: View {
   }
 
   @ViewBuilder private func detail() -> some View {
-    switch viewModel.state.selection {
-    case .patients:
-      NavigationStack {
-        PatientListView(viewModel: patientListViewModel)
-      }
-    case .tasks, .vitals:
-      ContentUnavailableView(
-        "Not implemented yet",
-        systemImage: "hammer",
-        description: Text("This proof of concept covers sign-in and the patient list.")
-      )
+    NavigationStack {
+      PatientListView(viewModel: patientListViewModel)
     }
   }
 
   @MainActor private func handleSidebarAction(_ action: SidebarSection.Action) {
     switch action {
-    case let .itemDidTap(item):
-      Task { await viewModel.doAction(.view(.menuItemDidTap(item))) }
+    case .categoryDidTap:
+      break
     case .signOutDidTap:
       Task { await viewModel.doAction(.view(.signOutDidTap)) }
     }
@@ -78,24 +65,24 @@ private extension MainView {
   struct SidebarSection: View {
 
     enum Action: Sendable {
-      case itemDidTap(MainViewModel.MenuItem)
+      case categoryDidTap(MainViewModel.Category)
       case signOutDidTap
     }
 
-    let items: [MainViewModel.MenuItem]
-    let selection: MainViewModel.MenuItem
+    let categories: [MainViewModel.Category]
+    let selection: MainViewModel.Category
     let serverHost: String
-    let practitionerReference: String?
+    let practitioner: MainViewModel.PractitionerIdentity?
     let send: @MainActor (Action) -> Void
 
     var body: some View {
       VStack(spacing: 0) {
         List {
-          ForEach(items) { item in
+          ForEach(categories) { category in
             SidebarRow(
-              item: item,
-              isSelected: item == selection,
-              onTap: { send(.itemDidTap(item)) }
+              category: category,
+              isSelected: category == selection,
+              onTap: { send(.categoryDidTap(category)) }
             )
           }
         }
@@ -105,7 +92,7 @@ private extension MainView {
 
         SidebarFooter(
           serverHost: serverHost,
-          practitionerReference: practitionerReference,
+          practitionerReference: practitioner?.reference,
           onSignOut: { send(.signOutDidTap) }
         )
       }
@@ -115,31 +102,22 @@ private extension MainView {
 
   struct SidebarRow: View {
 
-    let item: MainViewModel.MenuItem
+    let category: MainViewModel.Category
     let isSelected: Bool
     let onTap: @MainActor () -> Void
 
     var body: some View {
       Button(action: onTap) {
         HStack(spacing: 12) {
-          Image(systemName: item.symbolName)
+          Image(systemName: category.symbolName)
             .frame(width: 22)
-          Text(item.title)
+          Text(category.title)
           Spacer()
-          if !item.isAvailable {
-            Text("Planned")
-              .font(.caption2)
-              .foregroundStyle(.tertiary)
-          }
         }
         .contentShape(.rect)
       }
       .buttonStyle(.plain)
-      .foregroundStyle(item.isAvailable ? Color.primary : Color.secondary)
-      .listRowBackground(
-        isSelected ? Color.accentColor.opacity(0.15) : Color.clear
-      )
-      .disabled(!item.isAvailable)
+      .listRowBackground(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
     }
   }
 

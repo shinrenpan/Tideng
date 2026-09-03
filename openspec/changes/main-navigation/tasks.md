@@ -11,9 +11,9 @@
 
 ## 3. 主畫面的狀態與資料
 
-- [ ] 3.1 主畫面 State 能分別表達四個切片各自的計數與載入狀態，且計數值能區分「精確」與「至少」兩種語意。落實 design 決策「計數是下限而非精確值」。驗證：TidengTests 斷言注入單一切片的回應後，只有該切片的狀態改變、其餘維持 prepare；並斷言下限值與精確值在型別上可區分
-- [ ] 3.2 側邊欄 header 能呈現登入者姓名與職位，取不到時依序降級為僅姓名、再降級為 raw reference。滿足 Requirement: Sidebar shows the signed-in practitioner。落實 design 決策「登入者身分需要兩支查詢，且必須容忍失敗」。驗證：TidengTests 分別注入「姓名+職位」「僅姓名」「讀取失敗」三種 apiResponse，斷言 state 的 header 欄位符合預期且不含空白佔位
-- [ ] 3.3 四個計數各自獨立解析，任一失敗不影響其餘。滿足 Requirement: Slice counts resolve independently。落實 design 決策「計數獨立載入，首屏不等最慢的」。驗證：TidengTests 注入三成功一失敗的回應組合，斷言三個計數有值、失敗者標記為不可用、且四張卡片皆仍可點擊
+- [x] 3.1 主畫面 State 能分別表達四個切片各自的計數與載入狀態，且計數值能區分「精確」與「至少」兩種語意。落實 design 決策「計數是下限而非精確值」。驗證：TidengTests 斷言注入單一切片的回應後，只有該切片的狀態改變、其餘維持 prepare；並斷言下限值與精確值在型別上可區分
+- [x] 3.2 側邊欄 header 能呈現登入者姓名與職位，取不到時依序降級為僅姓名、再降級為 raw reference。滿足 Requirement: Sidebar shows the signed-in practitioner。落實 design 決策「登入者身分需要兩支查詢，且必須容忍失敗」。驗證：TidengTests 分別注入「姓名+職位」「僅姓名」「讀取失敗」三種 apiResponse，斷言 state 的 header 欄位符合預期且不含空白佔位
+- [x] 3.3 四個計數各自獨立解析，任一失敗不影響其餘。滿足 Requirement: Slice counts resolve independently。落實 design 決策「計數獨立載入，首屏不等最慢的」。驗證：TidengTests 注入三成功一失敗的回應組合，斷言三個計數有值、失敗者標記為不可用、且四張卡片皆仍可點擊
 
 ## 4. 主畫面的呈現與導航
 

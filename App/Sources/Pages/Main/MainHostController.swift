@@ -15,7 +15,11 @@ final class MainHostController: UIHostingController<MainView> {
       preconditionFailure("MainHostController 收到不合法的 base URL：\(baseURL)")
     }
 
-    self.viewModel = MainViewModel(tokenStore: tokenStore, serverHost: baseURL.host ?? baseURL.absoluteString)
+    self.viewModel = MainViewModel(
+      client: client,
+      tokenStore: tokenStore,
+      serverHost: baseURL.host ?? baseURL.absoluteString
+    )
     super.init(
       rootView: MainView(
         viewModel: viewModel,
@@ -41,6 +45,9 @@ private extension MainHostController {
 
   func handleRouter(_ router: MainViewModel.Router) {
     switch router {
+    case .toPatientList:
+      // 導航在任務 4.3 接上；切片目前由內容區直接呈現。
+      break
     case .toSignOut:
       AppRouter.shared.back(from: self)
     }

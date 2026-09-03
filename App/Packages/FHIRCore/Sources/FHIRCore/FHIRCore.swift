@@ -26,6 +26,7 @@ public enum FHIR {
 
     public typealias Patient = ModelsR4.Patient
     public typealias Practitioner = ModelsR4.Practitioner
+    public typealias PractitionerRole = ModelsR4.PractitionerRole
     public typealias Encounter = ModelsR4.Encounter
     public typealias Location = ModelsR4.Location
     public typealias Observation = ModelsR4.Observation
