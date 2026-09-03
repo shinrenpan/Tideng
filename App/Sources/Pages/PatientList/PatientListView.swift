@@ -7,7 +7,7 @@ private extension PatientListViewModel.Slice {
   /// 清單標題。切片名稱一律陳述事實——「超出參考值」而不是「異常」。
   var title: String {
     switch self {
-    case .all: String(localized: "Patients")
+    case .all: String(localized: "All Patients")
     case .seenToday: String(localized: "Seen Today")
     case .outOfRange: String(localized: "Outside Reference Range")
     case .onMedication: String(localized: "On Medication")

@@ -9,8 +9,25 @@ extension MainViewModel {
     var isFirstAppear: Bool = true
     var practitioner: PractitionerIdentity?
     var slices: [PatientSlice: SliceState] = PatientSlice.initialStates
+    /// 目前推進到哪個切片的清單。`nil` 表示停在 grid。
+    ///
+    /// 由 state 驅動而非 onRoute：這是內容區裡 NavigationStack 的推進，
+    /// 不需要取得 presenting VC，照 V 層規範屬於 View 自己做得到的事。
+    var presentedSlice: PatientSlice?
     /// 顯示在側邊欄底部，讓使用者知道自己連到哪裡。
     var serverHost: String = ""
+
+    /// 供 grid 依固定順序呈現。
+    var sliceCards: [SliceCard] {
+      PatientSlice.allCases.map { SliceCard(slice: $0, state: slices[$0] ?? .init()) }
+    }
+  }
+
+  struct SliceCard: Identifiable, Equatable, Sendable {
+    let slice: PatientSlice
+    let state: SliceState
+
+    var id: String { slice.rawValue }
   }
 
   struct SliceState: Equatable, Sendable {

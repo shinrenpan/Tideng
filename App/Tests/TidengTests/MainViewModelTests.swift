@@ -142,38 +142,48 @@ struct MainViewModelTests {
   }
 
   @Test
-  func `計數失敗的切片仍能導向清單`() async throws {
-    // 「卡片仍可點擊」在 VM 層的意義：即使計數取不到，點下去仍發出導航意圖。
+  func `計數失敗的切片仍能推進到清單`() async throws {
+    // 「卡片仍可點擊」在 VM 層的意義：即使計數取不到，點下去仍會推進。
     // 計數失敗不代表清單本身也會失敗。
     let viewModel = try makeViewModel()
-    let recorder = RouteRecorder<MainViewModel.Router>()
-    viewModel.onRoute = { recorder.record($0) }
 
     await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .failure(.transport(message: "timeout")))))
     await viewModel.doAction(.view(.sliceDidTap(.outOfRange)))
 
-    guard case let .toPatientList(slice) = recorder.last else {
-      Issue.record("預期收到 toPatientList，實際是 \(String(describing: recorder.last))")
-      return
-    }
-    #expect(slice == "outOfRange")
+    #expect(viewModel.state.presentedSlice == .outOfRange)
   }
 
   @Test
-  func `切片以字串識別碼跨越 feature 邊界`() async throws {
-    // 導航 payload 必須是 primitive——病人清單不該認識主畫面的 Domain Model。
+  func `每個切片都能被推進`() async throws {
     let viewModel = try makeViewModel()
-    let recorder = RouteRecorder<MainViewModel.Router>()
-    viewModel.onRoute = { recorder.record($0) }
 
     for slice in MainViewModel.PatientSlice.allCases {
       await viewModel.doAction(.view(.sliceDidTap(slice)))
-      guard case let .toPatientList(identifier) = recorder.last else {
-        Issue.record("預期收到 toPatientList")
-        return
-      }
-      #expect(identifier == slice.rawValue)
+      #expect(viewModel.state.presentedSlice == slice)
     }
+  }
+
+  @Test
+  func `sliceCards 以固定順序涵蓋全部切片`() throws {
+    let viewModel = try makeViewModel()
+    #expect(viewModel.state.sliceCards.map(\.slice) == MainViewModel.PatientSlice.allCases)
+  }
+
+  @Test
+  func `登出發出導航意圖並清除憑證`() async throws {
+    let storage = InMemoryTokenStorage()
+    let viewModel = MainViewModel(
+      client: try TestSupport.makeClient(),
+      tokenStore: try TestSupport.makeTokenStore(storage: storage),
+      serverHost: "example.org"
+    )
+    let recorder = RouteRecorder<MainViewModel.Router>()
+    viewModel.onRoute = { recorder.record($0) }
+
+    await viewModel.doAction(.view(.signOutDidTap))
+
+    #expect(recorder.last == .toSignOut)
+    #expect(storage.isEmpty)
   }
 
   // MARK: - 精確值 vs 下限值

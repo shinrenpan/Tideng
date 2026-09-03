@@ -63,8 +63,7 @@ extension MainViewModel {
     case sliceCount(PatientSlice, Result<FHIR.Bundle, FHIRClientError>)
   }
 
-  enum Router: Sendable {
-    case toPatientList(slice: String)
+  enum Router: Equatable, Sendable {
     case toSignOut
   }
 }
@@ -87,8 +86,7 @@ private extension MainViewModel {
       }
 
     case let .sliceDidTap(slice):
-      // 跨 feature 邊界只傳 primitive。
-      onRoute?(.toPatientList(slice: slice.rawValue))
+      state.presentedSlice = slice
 
     case .signOutDidTap:
       await tokenStore.signOut()

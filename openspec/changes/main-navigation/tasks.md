@@ -29,5 +29,5 @@
 
 ## 6. 文案與整體驗證
 
-- [ ] 6.1 本 change 新增的所有使用者可見文案在 en 與 zh-Hant 皆到位，且無判讀性字眼（異常、疑似、需注意、建議）。滿足 Requirement: User-facing text states facts and never clinical judgement。驗證：xcstringstool sync 後 stale 數為 0、未翻譯數為 0；並人工複查新增條目的用字
+- [x] 6.1 本 change 新增的所有使用者可見文案在 en 與 zh-Hant 皆到位，且無判讀性字眼（異常、疑似、需注意、建議）。滿足 Requirement: User-facing text states facts and never clinical judgement。驗證：xcstringstool sync 後 stale 數為 0、未翻譯數為 0；並人工複查新增條目的用字
 - [ ] 6.2 完整流程在模擬器上以英文與繁中各跑一次並截圖，確認新版主畫面在兩種語言下皆正確。驗證：以 -AppleLanguages 分別啟動並截圖，比對兩份截圖的文案與版面

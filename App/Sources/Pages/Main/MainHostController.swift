@@ -20,12 +20,14 @@ final class MainHostController: UIHostingController<MainView> {
       tokenStore: tokenStore,
       serverHost: baseURL.host ?? baseURL.absoluteString
     )
-    super.init(
-      rootView: MainView(
-        viewModel: viewModel,
-        patientListViewModel: PatientListViewModel(client: client)
-      )
+    // 四個切片的清單各自一個 ViewModel，在這裡建立並由 HostController 持有。
+    // 讓 View 自己建或自己快取，狀態會在每次重繪時丟失。
+    let patientLists = Dictionary(
+      uniqueKeysWithValues: MainViewModel.PatientSlice.allCases.map {
+        ($0, PatientListViewModel(client: client, sliceIdentifier: $0.rawValue))
+      }
     )
+    super.init(rootView: MainView(viewModel: viewModel, patientLists: patientLists))
   }
 
   @available(*, unavailable)
@@ -45,9 +47,6 @@ private extension MainHostController {
 
   func handleRouter(_ router: MainViewModel.Router) {
     switch router {
-    case .toPatientList:
-      // 導航在任務 4.3 接上；切片目前由內容區直接呈現。
-      break
     case .toSignOut:
       AppRouter.shared.back(from: self)
     }

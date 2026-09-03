@@ -1,12 +1,32 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld+": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld+"
+          }
+        }
+      }
+    },
     "Advanced": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "進階"
+          }
+        }
+      }
+    },
+    "All Patients": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部病人"
           }
         }
       }
@@ -131,6 +151,16 @@
         }
       }
     },
+    "Last 24 hours": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "近 24 小時"
+          }
+        }
+      }
+    },
     "Local SMART Launcher": {
       "localizations": {
         "zh-Hant": {
@@ -171,22 +201,22 @@
         }
       }
     },
-    "Not implemented yet": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "尚未實作"
-          }
-        }
-      }
-    },
     "Not recorded": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "未紀錄"
+          }
+        }
+      }
+    },
+    "On Medication": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用藥中"
           }
         }
       }
@@ -201,22 +231,22 @@
         }
       }
     },
+    "Outside Reference Range": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超出參考值"
+          }
+        }
+      }
+    },
     "Patients": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "病人"
-          }
-        }
-      }
-    },
-    "Planned": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "待實作"
           }
         }
       }
@@ -237,6 +267,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "SMART 公開 Sandbox"
+          }
+        }
+      }
+    },
+    "Seen Today": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日就診"
           }
         }
       }
@@ -361,16 +401,6 @@
         }
       }
     },
-    "This proof of concept covers sign-in and the patient list.": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "這個 PoC 先做通登入與病人清單。"
-          }
-        }
-      }
-    },
     "This server doesn't support the sign-in method this app uses.": {
       "localizations": {
         "zh-Hant": {
@@ -391,16 +421,6 @@
         }
       }
     },
-    "Today's Tasks": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今日待辦"
-          }
-        }
-      }
-    },
     "Try Again": {
       "localizations": {
         "zh-Hant": {
@@ -417,16 +437,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "未命名"
-          }
-        }
-      }
-    },
-    "Vital Signs": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "生命徵象"
           }
         }
       }
