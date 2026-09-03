@@ -69,3 +69,83 @@ public extension FHIRSearch {
         )
     }
 }
+
+// MARK: - 主畫面切片需要的查詢
+
+public extension FHIRSearch {
+
+    /// 某位 practitioner 的角色。用來取得職位顯示文字。
+    static func practitionerRoles(practitionerID: String) -> FHIRSearch {
+        FHIRSearch(
+            resourceType: "PractitionerRole",
+            parameters: [.init("practitioner", practitionerID)]
+        )
+    }
+
+    /// 今天（含）以後的就診，並帶回病人本身。
+    ///
+    /// 「今天」以**裝置所在時區的當地日期**為準——診所關心的是自己的一天，不是 UTC 的一天。
+    /// `now` 與 `calendar` 可注入，否則測試會隨執行時間與機器時區飄移。
+    static func encountersToday(
+        now: Date = .now,
+        calendar: Calendar = .current,
+        count: Int = 200
+    ) -> FHIRSearch {
+        FHIRSearch(
+            resourceType: "Encounter",
+            parameters: [
+                .init("date", "ge\(Self.localDate(now, calendar: calendar))"),
+                .init("_include", "Encounter:subject"),
+                .init("_count", String(count))
+            ]
+        )
+    }
+
+    /// 進行中的用藥請求。
+    static func activeMedicationRequests(count: Int = 200) -> FHIRSearch {
+        FHIRSearch(
+            resourceType: "MedicationRequest",
+            parameters: [
+                .init("status", "active"),
+                .init("_count", String(count))
+            ]
+        )
+    }
+
+    /// 近期的生命徵象。
+    ///
+    /// FHIR 沒有針對 referenceRange 的 search parameter，所以「超出參考值」只能把資料撈回來
+    /// 在 client 端比對。時間窗與 `_count` 是那個做法的必要邊界——沒有它們，資料量大的
+    /// server 會讓這個查詢無止境地長大。
+    static func recentVitalSigns(
+        now: Date = .now,
+        hours: Int = 24,
+        count: Int = 500
+    ) -> FHIRSearch {
+        let since = now.addingTimeInterval(-Double(hours) * 3600)
+        return FHIRSearch(
+            resourceType: "Observation",
+            parameters: [
+                .init("category", ObservationCategory.vitalSigns),
+                .init("date", "ge\(Self.instant(since))"),
+                .init("_count", String(count))
+            ]
+        )
+    }
+
+    // MARK: - 日期格式
+
+    /// FHIR `date` 精度（YYYY-MM-DD），以指定曆法的時區解讀。
+    private static func localDate(_ date: Date, calendar: Calendar) -> String {
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
+    }
+
+    /// FHIR `instant` 精度，一律 UTC。
+    private static func instant(_ date: Date) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.string(from: date)
+    }
+}

@@ -14,6 +14,18 @@ packages:
   SmartAuth:
     path: Packages/SmartAuth
 
+schemes:
+  Tideng:
+    build:
+      targets:
+        Tideng: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - TidengTests
+
 targets:
   Tideng:
     type: application
@@ -66,3 +78,19 @@ targets:
           - CFBundleURLName: com.shinrenpan.Tideng
             CFBundleURLSchemes:
               - tideng
+
+  TidengTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/TidengTests
+    dependencies:
+      - target: Tideng
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        TARGETED_DEVICE_FAMILY: "2"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tideng.app/Tideng"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        CODE_SIGNING_ALLOWED: NO

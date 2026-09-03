@@ -88,7 +88,7 @@ extension PatientListViewModel.Patient {
     guard let id = resource.id?.value?.string else { return nil }
 
     self.id = id
-    self.name = Self.displayName(from: resource.name) ?? String(localized: "Unnamed")
+    self.name = resource.name?.firstDisplayText ?? String(localized: "Unnamed")
     self.gender = .init(resource.gender?.value)
     self.birthDate = resource.birthDate?.value.map {
       DateComponents(
@@ -102,28 +102,6 @@ extension PatientListViewModel.Patient {
       .first
   }
 
-  /// 從 `HumanName` 組出可顯示的姓名。
-  ///
-  /// 中文姓名不加空格（王小明），西文才加（John Smith）——FHIR 沒有欄位表達這件事，
-  /// 只能從字元判斷。server 有給 `text` 時一律以它為準，那是資料提供方自己排好的。
-  private static func displayName(from names: [FHIR.HumanName]?) -> String? {
-    guard let name = names?.first else { return nil }
-
-    if let text = name.text?.value?.string, !text.isEmpty {
-      return text
-    }
-
-    let family = name.family?.value?.string ?? ""
-    let given = (name.given ?? []).compactMap { $0.value?.string }.joined(separator: " ")
-    guard !family.isEmpty || !given.isEmpty else { return nil }
-
-    let isCJK = (family + given).unicodeScalars.contains { scalar in
-      (0x4E00...0x9FFF).contains(scalar.value) || (0x3400...0x4DBF).contains(scalar.value)
-    }
-    return isCJK
-      ? family + given
-      : [given, family].filter { !$0.isEmpty }.joined(separator: " ")
-  }
 }
 
 extension PatientListViewModel.PatientGender {

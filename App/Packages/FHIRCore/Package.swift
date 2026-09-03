@@ -15,6 +15,7 @@ let package = Package(
         .target(
             name: "FHIRCore",
             dependencies: [.product(name: "ModelsR4", package: "FHIRModels")]
-        )
+        ),
+        .testTarget(name: "FHIRCoreTests", dependencies: ["FHIRCore"])
     ]
 )

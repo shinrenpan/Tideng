@@ -82,6 +82,20 @@ struct FHIRClientTests {
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer abc123")
     }
 
+    @Test("讀取單一 practitioner 組出正確路徑")
+    func readsPractitioner() async throws {
+        // read 用 String(describing:) 推導 resource type。FHIR.Practitioner 是 typealias，
+        // 若 describing 給出的不是 "Practitioner"，path 就會錯——這條測的就是那件事。
+        StubURLProtocol.stub(body: Data(#"{"resourceType":"Practitioner","id":"137594487"}"#.utf8))
+        let client = try makeClient()
+
+        let practitioner = try await client.read(FHIR.Practitioner.self, id: "137594487")
+
+        let url = try #require(StubURLProtocol.lastRequest?.url?.absoluteString)
+        #expect(url == "http://example.org/fhir/Practitioner/137594487")
+        #expect(practitioner.id?.value?.string == "137594487")
+    }
+
     // MARK: - 回應解析
 
     @Test("從混合 bundle 中依型別取出資源")

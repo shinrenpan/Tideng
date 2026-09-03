@@ -1,13 +1,13 @@
 ## 1. 測試落腳處
 
-- [ ] 1.1 [P] FHIRCore 具備可執行的測試 target，且 swift test 在該 package 內可跑出結果。驗證：在 App/Packages/FHIRCore 執行 swift test 回報通過的測試數而非「no tests」
-- [ ] 1.2 [P] App target 具備 unit test target（命名 TidengTests），可測試 ViewModel。驗證：xcodebuild test 指定 -only-testing:TidengTests 通過一個確認 ViewModel 可被建構的測試
+- [x] 1.1 [P] FHIRCore 具備可執行的測試 target，且 swift test 在該 package 內可跑出結果。驗證：在 App/Packages/FHIRCore 執行 swift test 回報通過的測試數而非「no tests」
+- [x] 1.2 [P] App target 具備 unit test target（命名 TidengTests），可測試 ViewModel。驗證：xcodebuild test 指定 -only-testing:TidengTests 通過一個確認 ViewModel 可被建構的測試
 
 ## 2. FHIR 層的查詢與判定
 
-- [ ] 2.1 [P] FHIRClient 能組出五條新查詢：讀取單一 practitioner、依 practitioner 搜尋 role、今日就診（含 subject include）、進行中的用藥請求、近 24 小時帶參考範圍的生命徵象。生命徵象查詢帶上取樣邊界（24 小時時間窗、單次 500 筆上限），落實 design 決策「「超出參考值」必須在 client 端算，因此要有明確的取樣邊界」。驗證：FHIRSearchTests 針對每條查詢斷言送出的 path 與 query 參數，含時間窗與 count 上限（沿用既有 StubURLProtocol 模式）
-- [ ] 2.2 [P] 參考範圍判定為純函式，只依 server 提供的 referenceRange 判斷數值是否落在範圍外，不使用任何內建常數。滿足 Requirement: Out-of-range determination uses only server-supplied ranges。驗證：表格驅動測試涵蓋值高於上界、低於下界、範圍內、只有下界、只有上界、無參考範圍、非數值型 value 共七種輸入
-- [ ] 2.3 [P] HumanName 的顯示字串組合規則位於 FHIRCore，`clinical-dashboard` 與 `patient-list` 共用同一實作。支撐 Requirement: Patient rows present identity without interpretation 的姓名部分。驗證：測試涵蓋有 text、CJK family+given 無空格、西文 family+given 有空格、完全無姓名共四種輸入
+- [x] 2.1 [P] FHIRClient 能組出五條新查詢：讀取單一 practitioner、依 practitioner 搜尋 role、今日就診（含 subject include）、進行中的用藥請求、近 24 小時帶參考範圍的生命徵象。生命徵象查詢帶上取樣邊界（24 小時時間窗、單次 500 筆上限），落實 design 決策「「超出參考值」必須在 client 端算，因此要有明確的取樣邊界」。驗證：FHIRSearchTests 針對每條查詢斷言送出的 path 與 query 參數，含時間窗與 count 上限（沿用既有 StubURLProtocol 模式）
+- [x] 2.2 [P] 參考範圍判定為純函式，只依 server 提供的 referenceRange 判斷數值是否落在範圍外，不使用任何內建常數。滿足 Requirement: Out-of-range determination uses only server-supplied ranges。驗證：表格驅動測試涵蓋值高於上界、低於下界、範圍內、只有下界、只有上界、無參考範圍、非數值型 value 共七種輸入
+- [x] 2.3 [P] HumanName 的顯示字串組合規則位於 FHIRCore，`clinical-dashboard` 與 `patient-list` 共用同一實作。支撐 Requirement: Patient rows present identity without interpretation 的姓名部分。驗證：測試涵蓋有 text、CJK family+given 無空格、西文 family+given 有空格、完全無姓名共四種輸入
 
 ## 3. 主畫面的狀態與資料
 
