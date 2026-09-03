@@ -17,9 +17,9 @@
 
 ## 4. 主畫面的呈現與導航
 
-- [ ] 4.1 側邊欄呈現 header、大分類、footer 三段，且不出現任何標記為待實作的佔位項。滿足 Requirement: Sidebar presents top-level categories 與 Requirement: Sidebar footer identifies the connected server。驗證：模擬器截圖確認側邊欄只列出可用的大分類，footer 的 server host 與登出控制正常且登出後回到伺服器輸入畫面
-- [ ] 4.2 內容區以 grid 呈現四張切片卡片，卡片在任何計數解析前即可見，各自顯示載入指示；下限值以明確標記呈現而非純數字。滿足 Requirement: Content area presents patient slices as cards。落實 design 決策「子分類是病人切片，不是資料類型」。驗證：模擬器實跑觀察卡片先出現、數字後到；並以 Preview 注入下限值確認標記存在
-- [ ] 4.3 點選切片卡片在內容區 push 已套用該切片的病人清單，返回後回到 grid 且計數不重新查詢。滿足 Requirement: Selecting a card opens the corresponding patient list。落實 design 決策「導航用內容區內的 NavigationStack」。驗證：模擬器操作一次「今日就診」卡片的進入與返回，確認清單內容與返回後的計數皆符合
+- [x] 4.1 側邊欄呈現 header、大分類、footer 三段，且不出現任何標記為待實作的佔位項。滿足 Requirement: Sidebar presents top-level categories 與 Requirement: Sidebar footer identifies the connected server。驗證：模擬器截圖確認側邊欄只列出可用的大分類，footer 的 server host 與登出控制正常且登出後回到伺服器輸入畫面
+- [x] 4.2 內容區以 grid 呈現四張切片卡片，卡片在任何計數解析前即可見，各自顯示載入指示；下限值以明確標記呈現而非純數字。滿足 Requirement: Content area presents patient slices as cards。落實 design 決策「子分類是病人切片，不是資料類型」。驗證：模擬器實跑觀察卡片先出現、數字後到；並以 Preview 注入下限值確認標記存在
+- [x] 4.3 點選切片卡片在內容區 push 已套用該切片的病人清單，返回後回到 grid 且計數不重新查詢。滿足 Requirement: Selecting a card opens the corresponding patient list。落實 design 決策「導航用內容區內的 NavigationStack」。驗證：模擬器操作一次「今日就診」卡片的進入與返回，確認清單內容與返回後的計數皆符合
 
 ## 5. 病人清單接受切片
 
@@ -30,4 +30,4 @@
 ## 6. 文案與整體驗證
 
 - [x] 6.1 本 change 新增的所有使用者可見文案在 en 與 zh-Hant 皆到位，且無判讀性字眼（異常、疑似、需注意、建議）。滿足 Requirement: User-facing text states facts and never clinical judgement。驗證：xcstringstool sync 後 stale 數為 0、未翻譯數為 0；並人工複查新增條目的用字
-- [ ] 6.2 完整流程在模擬器上以英文與繁中各跑一次並截圖，確認新版主畫面在兩種語言下皆正確。驗證：以 -AppleLanguages 分別啟動並截圖，比對兩份截圖的文案與版面
+- [x] 6.2 完整流程在模擬器上以英文與繁中各跑一次並截圖，確認新版主畫面在兩種語言下皆正確。驗證：以 -AppleLanguages 分別啟動並截圖，比對兩份截圖的文案與版面

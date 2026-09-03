@@ -52,9 +52,12 @@ private extension MainViewModel.PatientSlice {
 private extension MainViewModel.SliceCount {
 
   /// 下限值必須看得出來是下限，否則會被當成總數。
+  ///
+  /// 「至少 0」是例外：它沒有任何資訊量，用數字呈現只會讓人以為那是計數。
   var displayText: String {
     switch self {
     case let .exact(value): value.formatted()
+    case .atLeast(0): "—"
     case let .atLeast(value): String(localized: "\(value)+")
     }
   }

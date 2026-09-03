@@ -394,3 +394,29 @@ struct MainViewModelPartialDecodeTests {
     #expect(viewModel.state.slices[.outOfRange]?.count == nil)
   }
 }
+
+// MARK: - 計數的語意
+
+@MainActor
+struct SliceCountSemanticsTests {
+
+  @Test
+  func `下限值與精確值不相等即使數字相同`() {
+    #expect(MainViewModel.SliceCount.exact(3) != MainViewModel.SliceCount.atLeast(3))
+  }
+
+  @Test
+  func `下限值標記得出來`() {
+    #expect(MainViewModel.SliceCount.atLeast(3).isLowerBound)
+    #expect(MainViewModel.SliceCount.exact(3).isLowerBound == false)
+  }
+
+  @Test
+  func `至少零不帶任何資訊`() {
+    // 「至少 0」與「完全沒有資訊」等價——View 據此不以數字呈現它。
+    let noInformation = MainViewModel.SliceCount.atLeast(0)
+    #expect(noInformation.amount == 0)
+    #expect(noInformation.isLowerBound)
+    #expect(noInformation != .exact(0))
+  }
+}

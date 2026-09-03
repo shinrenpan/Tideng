@@ -128,6 +128,13 @@ than what this client managed to parse.
 - **THEN** the count is marked as a lower bound rather than presented as exact, so the
   displayed number never claims to be a total it cannot guarantee
 
+#### Scenario: A lower bound of zero carries no information
+
+- **WHEN** a slice count resolves to a lower bound of zero
+- **THEN** the card SHALL NOT present it as a number, because "at least zero" states nothing —
+  it is indistinguishable from having no information at all, and rendering it as "0+" invites
+  the reader to interpret it as a count
+
 #### Scenario: A server-reported total survives local decoding failures
 
 - **WHEN** the server reports a total of 307 and one entry fails to decode locally
