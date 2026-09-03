@@ -50,6 +50,17 @@ demo 階段只能靠 Siming 或公開 sandbox。
 自洽）；`aud` 參數有獨立測試（SMART 最常被漏、漏了部分 server 直接拒絕）；**10 個並發請求
 撞到 token 過期只打一次 token endpoint**。
 
+### 真實環境驗過的（不只單元測試）
+
+| 項目 | 結果 |
+|---|---|
+| 完整 standalone launch（discovery → 授權 → 換 token） | 通過，`Practitioner` reference 從 `id_token` 解出並顯示 |
+| 帶 Bearer token 取得病人資料 | 通過。launcher 對帶進來的 token 會做 JWT 驗證（亂編的 token 回 `401 Invalid token: jwt malformed`），所以拿到 200 就代表 token 有效 |
+| **token 過期後自動換發** | 通過。access token 壽命設 5 分鐘（`ACCESS_TOKEN_LIFETIME`），擱置超過後下拉刷新仍正常取得資料，未被踢回登入頁 |
+
+尚未驗證的反方向：**無授權會被拒絕**。launcher 在完全不帶 token 時放行（開發模式），
+要驗證強制授權得等 Phase B 接上 Siming，或用 launcher 的 `auth_error` 模擬。
+
 ## 3. 還沒做的
 
 - 病人詳情 + 生命徵象趨勢圖 ← **下一步**

@@ -105,7 +105,7 @@
 - 交班（SBAR）
 - 敘述性護理紀錄（DAR/SOAP）
 - FHIR `Subscription` / push notification
-- 多語系（僅 zh-Hant）
+- ~~多語系（僅 zh-Hant）~~ → **已實作**：base language 為 `en`，另附 `zh-Hant`。改動理由是對外（THAS 之外的市場、FHIR 社群）需要英文介面，而 FHIR／醫療領域的通用語言本來就是英文
 - IAP 付費牆（僅預留 gating 介面）
 - iPhone 最佳化、Apple Watch
 - EHR launch（僅 standalone）

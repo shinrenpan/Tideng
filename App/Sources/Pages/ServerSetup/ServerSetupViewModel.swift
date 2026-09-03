@@ -96,7 +96,7 @@ private extension ServerSetupViewModel {
     case .signIn:
       guard let baseURL = normalisedBaseURL() else {
         await doAction(.apiResponse(.signIn(.failure(
-          .discoveryFailed(reason: "網址格式不正確")
+          .discoveryFailed(reason: String(localized: "That doesn't look like a valid server address."))
         ))))
         return
       }
@@ -159,7 +159,7 @@ private extension ServerSetupViewModel {
         // 使用者自己取消不算錯誤，畫面回到可以再按一次的狀態就好。
         state.api.signIn = error == .userCancelled
           ? .prepare
-          : .error(message: error.errorDescription ?? "登入失敗")
+          : .error(message: ErrorMessage.text(for: error))
       }
     }
   }

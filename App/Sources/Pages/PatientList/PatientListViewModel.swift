@@ -106,7 +106,7 @@ private extension PatientListViewModel {
 
       case let .failure(error):
         // 刻意不清空 state.patients：刷新失敗時使用者眼前的清單要留著。
-        state.api.loadPatients = .error(message: error.errorDescription ?? "載入失敗")
+        state.api.loadPatients = .error(message: ErrorMessage.text(for: error))
       }
     }
   }

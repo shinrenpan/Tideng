@@ -15,10 +15,10 @@ private extension PatientListViewModel.PatientGender {
 
   var label: String {
     switch self {
-    case .male: "男"
-    case .female: "女"
-    case .other: "其他"
-    case .unknown: "未紀錄"
+    case .male: String(localized: "Male")
+    case .female: String(localized: "Female")
+    case .other: String(localized: "Other")
+    case .unknown: String(localized: "Not recorded")
     }
   }
 }
@@ -33,8 +33,8 @@ struct PatientListView: View {
     @Bindable var bVM = viewModel
 
     content()
-      .navigationTitle("病人")
-      .searchable(text: $bVM.state.keyword, prompt: "姓名或病歷號")
+      .navigationTitle("Patients")
+      .searchable(text: $bVM.state.keyword, prompt: "Name or record number")
       .refreshable { await viewModel.doAction(.view(.pullToRefresh)) }
       .task { await viewModel.doAction(.view(.isFirstAppear)) }
   }
@@ -48,17 +48,17 @@ struct PatientListView: View {
 
       case let .error(message):
         ContentUnavailableView {
-          Label("讀不到病人清單", systemImage: "exclamationmark.triangle")
+          Label("Can't load patients", systemImage: "exclamationmark.triangle")
         } description: {
           Text(message)
         } actions: {
-          Button("重新載入") {
+          Button("Try Again") {
             Task { await viewModel.doAction(.view(.retryDidTap)) }
           }
         }
 
       case .success:
-        ContentUnavailableView("這個伺服器上沒有病人資料", systemImage: "tray")
+        ContentUnavailableView("No patients on this server", systemImage: "tray")
       }
     } else {
       ListSection(patients: viewModel.state.filteredPatients)
@@ -106,10 +106,10 @@ private extension PatientListView {
           HStack(spacing: 6) {
             Text(patient.gender.label)
             if let age = patient.age {
-              Text("・\(age) 歲")
+              Text("· \(age) yrs")
             }
             if let recordNumber = patient.recordNumber {
-              Text("・\(recordNumber)")
+              Text("· \(recordNumber)")
                 .monospacedDigit()
             }
           }
@@ -125,7 +125,7 @@ private extension PatientListView {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("有資料") {
+#Preview("With data") {
   let vm = PatientListViewModel(client: .preview)
   vm.state.isFirstAppear = false
   vm.state.patients = PatientListViewModel.Patient.mocks
@@ -133,17 +133,17 @@ private extension PatientListView {
   return NavigationStack { PatientListView(viewModel: vm) }
 }
 
-#Preview("空清單") {
+#Preview("Empty") {
   let vm = PatientListViewModel(client: .preview)
   vm.state.isFirstAppear = false
   vm.state.api.loadPatients = .success
   return NavigationStack { PatientListView(viewModel: vm) }
 }
 
-#Preview("載入失敗") {
+#Preview("Load failed") {
   let vm = PatientListViewModel(client: .preview)
   vm.state.isFirstAppear = false
-  vm.state.api.loadPatients = .error(message: "無法連線到伺服器")
+  vm.state.api.loadPatients = .error(message: "Can't reach the server. Check the address and your connection.")
   return NavigationStack { PatientListView(viewModel: vm) }
 }
 #endif

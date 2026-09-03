@@ -23,7 +23,7 @@ extension PatientListViewModel.Patient {
     .init(id: "p-004", name: "黃淑芬", gender: .female,
           birthDate: DateComponents(year: 1989), recordNumber: nil),
     // 沒有姓名與病歷號的極簡資料，用來檢查版面不會塌。
-    .init(id: "p-005", name: "未命名", gender: .unknown,
+    .init(id: "p-005", name: "Unnamed", gender: .unknown,
           birthDate: nil, recordNumber: nil),
     .init(id: "p-006", name: "John Smith", gender: .male,
           birthDate: DateComponents(year: 1980, month: 1, day: 20), recordNumber: "F001122")

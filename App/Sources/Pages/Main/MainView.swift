@@ -6,9 +6,9 @@ private extension MainViewModel.MenuItem {
 
   var title: String {
     switch self {
-    case .patients: "病人"
-    case .tasks: "今日待辦"
-    case .vitals: "生命徵象"
+    case .patients: String(localized: "Patients")
+    case .tasks: String(localized: "Today's Tasks")
+    case .vitals: String(localized: "Vital Signs")
     }
   }
 
@@ -54,9 +54,9 @@ struct MainView: View {
       }
     case .tasks, .vitals:
       ContentUnavailableView(
-        "尚未實作",
+        "Not implemented yet",
         systemImage: "hammer",
-        description: Text("這個 PoC 先做通登入與病人清單")
+        description: Text("This proof of concept covers sign-in and the patient list.")
       )
     }
   }
@@ -109,7 +109,7 @@ private extension MainView {
           onSignOut: { send(.signOutDidTap) }
         )
       }
-      .navigationTitle("提燈")
+      .navigationTitle("Tideng")
     }
   }
 
@@ -127,7 +127,7 @@ private extension MainView {
           Text(item.title)
           Spacer()
           if !item.isAvailable {
-            Text("待實作")
+            Text("Planned")
               .font(.caption2)
               .foregroundStyle(.tertiary)
           }
@@ -166,7 +166,7 @@ private extension MainView {
           }
         }
 
-        Button("登出", systemImage: "rectangle.portrait.and.arrow.right", action: onSignOut)
+        Button("Sign Out", systemImage: "rectangle.portrait.and.arrow.right", action: onSignOut)
           .font(.caption)
           .buttonStyle(.plain)
           .foregroundStyle(.red)

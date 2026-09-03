@@ -28,24 +28,39 @@ public enum FHIRClientError: Error, Sendable {
     case invalidBaseURL(String)
 }
 
-extension FHIRClientError: LocalizedError {
-    public var errorDescription: String? {
+extension FHIRClientError: CustomStringConvertible {
+
+    /// 給 log 與 debug 用的技術描述，**不是** UI 文案。
+    ///
+    /// 使用者看到的文字由 app 層依 case 決定——package 是基礎設施，不該持有 UI 文案，
+    /// 也不該為了本地化去背一個 resource bundle。
+    public var description: String {
         switch self {
-        case .transport:
-            return "無法連線到伺服器"
-        case .unauthorized:
-            return "登入已失效，請重新登入"
-        case let .operationOutcome(outcome, _):
+        case let .transport(message):
+            return "transport failure: \(message)"
+        case let .unauthorized(status):
+            return "unauthorized (HTTP \(status))"
+        case let .operationOutcome(outcome, status):
             let details = outcome.issue.compactMap { issue in
                 issue.diagnostics?.value?.string ?? issue.details?.text?.value?.string
             }
-            return details.isEmpty ? "伺服器拒絕了這個請求" : details.joined(separator: "\n")
+            return "server rejected the request (HTTP \(status)): \(details.joined(separator: "; "))"
         case let .unexpectedStatus(code):
-            return "伺服器回應異常（HTTP \(code)）"
-        case .decoding:
-            return "伺服器回應的格式無法解讀"
+            return "unexpected HTTP status \(code)"
+        case let .decoding(message):
+            return "malformed FHIR response: \(message)"
         case let .invalidBaseURL(raw):
-            return "伺服器位址不正確：\(raw)"
+            return "invalid base URL: \(raw)"
         }
+    }
+
+    /// server 對這次失敗的說明（`OperationOutcome.issue`）。有的話值得原樣呈現給使用者——
+    /// 那是唯一能講清楚「到底哪裡不對」的來源。
+    public var serverDiagnostics: String? {
+        guard case let .operationOutcome(outcome, _) = self else { return nil }
+        let details = outcome.issue.compactMap { issue in
+            issue.diagnostics?.value?.string ?? issue.details?.text?.value?.string
+        }
+        return details.isEmpty ? nil : details.joined(separator: "\n")
     }
 }

@@ -41,10 +41,10 @@ struct ServerSetupView: View {
         .font(.system(size: 40))
         .foregroundStyle(.tint)
 
-      Text("提燈")
+      Text("Tideng")
         .font(.largeTitle.weight(.semibold))
 
-      Text("連線到任何支援 SMART on FHIR 的伺服器")
+      Text("Connect to any SMART on FHIR server")
         .font(.subheadline)
         .foregroundStyle(.secondary)
     }
@@ -83,7 +83,7 @@ private extension ServerSetupView {
     var body: some View {
       VStack(alignment: .leading, spacing: 20) {
         VStack(alignment: .leading, spacing: 8) {
-          Text("FHIR 伺服器位址")
+          Text("FHIR server address")
             .font(.footnote.weight(.medium))
             .foregroundStyle(.secondary)
 
@@ -102,7 +102,7 @@ private extension ServerSetupView {
           send(.presetDidTap(id: id))
         }
 
-        DisclosureGroup("進階", isExpanded: $isAdvancedExpanded) {
+        DisclosureGroup("Advanced", isExpanded: $isAdvancedExpanded) {
           VStack(alignment: .leading, spacing: 8) {
             Text("Client ID")
               .font(.footnote.weight(.medium))
@@ -137,7 +137,7 @@ private extension ServerSetupView {
                 .controlSize(.small)
                 .tint(.white)
             }
-            Text(status == .loading ? "連線中…" : "登入")
+            Text(status == .loading ? "Connecting…" : "Sign In")
               .font(.body.weight(.semibold))
           }
           .frame(maxWidth: .infinity)
@@ -158,7 +158,7 @@ private extension ServerSetupView {
 
     var body: some View {
       VStack(alignment: .leading, spacing: 8) {
-        Text("快速填入")
+        Text("Quick fill")
           .font(.footnote.weight(.medium))
           .foregroundStyle(.secondary)
 
@@ -194,14 +194,14 @@ private extension ServerSetupView {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("初始") {
+#Preview("Initial") {
   ServerSetupView(viewModel: ServerSetupViewModel())
 }
 
-#Preview("登入失敗") {
+#Preview("Sign-in failed") {
   let vm = ServerSetupViewModel()
   vm.state.baseURLText = "http://localhost:8090/v/r4/fhir"
-  vm.state.api.signIn = .error(message: "此伺服器不支援 standalone 登入")
+  vm.state.api.signIn = .error(message: "This server doesn't support standalone sign-in")
   return ServerSetupView(viewModel: vm)
 }
 #endif

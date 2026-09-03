@@ -29,6 +29,11 @@ targets:
       base:
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: complete
+        # 必須是 YES。關掉的話只有舊的來源解析器在跑，而它只認得 Text("字面值")——
+        # Button / Label / TextField / ContentUnavailableView / alert 全部看不到，
+        # 活著的字串會被整批誤標成 stale。
+        SWIFT_EMIT_LOC_STRINGS: YES
+        DEVELOPMENT_LANGUAGE: en
         TARGETED_DEVICE_FAMILY: "2"   # iPad only
         DEVELOPMENT_TEAM: ""
         CODE_SIGN_STYLE: Automatic
@@ -36,7 +41,7 @@ targets:
     info:
       path: Resources/Info.plist
       properties:
-        CFBundleDisplayName: 提燈
+        CFBundleDisplayName: Tideng
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false

@@ -144,7 +144,7 @@ struct FHIRClientTests {
         }
     }
 
-    @Test("server 的 OperationOutcome 被解析出來給使用者看")
+    @Test("server 的 OperationOutcome 被解析出來供上層呈現")
     func surfacesOperationOutcome() async throws {
         StubURLProtocol.stub(status: 400, body: Fixtures.operationOutcome)
         let client = try makeClient()
@@ -159,7 +159,8 @@ struct FHIRClientTests {
             }
             #expect(status == 400)
             #expect(outcome.issue.count == 1)
-            #expect(error.errorDescription == "不支援的搜尋參數：_sort")
+            // server 的說法要能原樣取出——那是唯一講得清楚哪裡不對的來源。
+            #expect(error.serverDiagnostics == "不支援的搜尋參數：_sort")
         }
     }
 

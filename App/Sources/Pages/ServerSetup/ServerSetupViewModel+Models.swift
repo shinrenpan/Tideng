@@ -52,20 +52,20 @@ extension ServerSetupViewModel.ServerPreset {
   static let builtIn: [Self] = [
     .init(
       id: "local-launcher",
-      name: "本機 SMART Launcher",
+      name: String(localized: "Local SMART Launcher"),
       // `sim/e30` 的 e30 是 base64url("{}")，也就是最小的 launch options。
       // 少了 sim 這一段，authorize 會回 "Invalid launch options" —— discovery 卻是通的，
       // 所以問題會拖到按下登入才炸出來。
       baseURL: "http://localhost:8090/v/r4/sim/e30/fhir",
       clientID: "tideng",
-      note: "Server/docker-compose.yml 起的服務"
+      note: String(localized: "The service started by Server/docker-compose.yml")
     ),
     .init(
       id: "smart-sandbox",
-      name: "SMART 公開 Sandbox",
+      name: String(localized: "SMART public sandbox"),
       baseURL: "https://launch.smarthealthit.org/v/r4/sim/e30/fhir",
       clientID: "tideng",
-      note: "驗證對外部 server 的相容性"
+      note: String(localized: "Check compatibility with external servers")
     )
   ]
 }

@@ -88,7 +88,7 @@ extension PatientListViewModel.Patient {
     guard let id = resource.id?.value?.string else { return nil }
 
     self.id = id
-    self.name = Self.displayName(from: resource.name) ?? "未命名"
+    self.name = Self.displayName(from: resource.name) ?? String(localized: "Unnamed")
     self.gender = .init(resource.gender?.value)
     self.birthDate = resource.birthDate?.value.map {
       DateComponents(

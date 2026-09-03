@@ -72,6 +72,37 @@ All four orientations are declared. `UIRequiresFullScreen` is deprecated as of i
 and orientation locks are being phased out — do not reintroduce one. The window minimum
 size is set in `SceneDelegate` instead.
 
+## Localization
+
+Base language is `en`; `zh-Hant` is a translation. `SWIFT_EMIT_LOC_STRINGS` must stay `YES`
+— with it off, only the legacy extractor runs and it recognizes just `Text("literal")`,
+so `Button` / `Label` / `TextField` / `ContentUnavailableView` strings get mass-flagged stale.
+
+Workflow — **keys belong to the compiler, values belong to you**. Never invent a key:
+
+```bash
+# 1. write English literals directly inside Text() / String(localized:)
+# 2. build (produces .stringsdata)
+# 3. sync them into the catalog — repeat --stringsdata per file, it is not space-separated
+find build/Build/Intermediates.noindex/Tideng.build -name '*.stringsdata'
+xcrun xcstringstool sync Resources/Localizable.xcstrings --stringsdata <f1> --stringsdata <f2> ...
+# 4. fill in zh-Hant for the keys that appeared; clear stale ones
+```
+
+Done means **stale = 0 and untranslated = 0**.
+
+Literals must sit directly inside `Text()` / `String(localized:)`. Passing a
+`LocalizedStringKey` as a parameter lands it in `__PotentialKeys` and gets it flagged stale —
+someone cleaning up by the warning then deletes a live translation.
+
+Things that deliberately stay untranslated (`shouldTranslate: false`): the example URL
+`https://example.org/fhir` and the `client_id` field name — translating them would leave the
+user unsure what to type.
+
+Packages carry no UI copy. `FHIRClientError` / `SmartAuthError` expose a `description` for
+logs and `serverDiagnostics` for the server's own wording; `Sources/Shared/ErrorMessage.swift`
+maps cases to localized text.
+
 ## Architecture
 
 Features follow the MVVMC skills (`mvvmc-structure`, `-model`, `-viewmodel`, `-view`,

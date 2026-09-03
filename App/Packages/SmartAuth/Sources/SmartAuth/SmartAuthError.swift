@@ -26,26 +26,40 @@ public enum SmartAuthError: Error, Sendable, Equatable {
     case transport(message: String)
 }
 
-extension SmartAuthError: LocalizedError {
+extension SmartAuthError: CustomStringConvertible {
 
-    public var errorDescription: String? {
+    /// 給 log 與 debug 用的技術描述，**不是** UI 文案（理由同 `FHIRClientError`）。
+    public var description: String {
         switch self {
         case let .discoveryFailed(reason):
-            return "無法取得伺服器設定：\(reason)"
+            return "SMART discovery failed: \(reason)"
         case let .unsupportedServer(reason):
-            return reason
+            return "server does not support the required flow: \(reason)"
         case .stateMismatch:
-            return "授權回應驗證失敗，請重新登入"
+            return "authorization callback state mismatch (possible CSRF)"
         case .userCancelled:
-            return "已取消登入"
+            return "user cancelled the authorization"
         case let .authorizationDenied(error, description):
-            return description ?? "授權被拒絕（\(error)）"
+            return "authorization denied: \(error)\(description.map { " — \($0)" } ?? "")"
         case let .tokenExchangeFailed(reason):
-            return "無法取得存取權杖：\(reason)"
+            return "token exchange failed: \(reason)"
         case .sessionExpired:
-            return "登入已過期，請重新登入"
+            return "session expired, re-authentication required"
         case let .transport(message):
-            return "連線失敗：\(message)"
+            return "transport failure: \(message)"
+        }
+    }
+
+    /// server 自己給的說明（`error_description` 等）。有的話值得原樣呈現給使用者。
+    public var serverDiagnostics: String? {
+        switch self {
+        case let .discoveryFailed(reason), let .unsupportedServer(reason),
+             let .tokenExchangeFailed(reason):
+            return reason
+        case let .authorizationDenied(_, description):
+            return description
+        default:
+            return nil
         }
     }
 }

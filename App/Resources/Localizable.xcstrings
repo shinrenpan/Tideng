@@ -1,0 +1,472 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Advanced": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進階"
+          }
+        }
+      }
+    },
+    "Can't load patients": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "讀不到病人清單"
+          }
+        }
+      }
+    },
+    "Can't reach the server. Check the address and your connection.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法連線到伺服器，請檢查位址與網路連線。"
+          }
+        }
+      }
+    },
+    "Check compatibility with external servers": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "驗證對外部伺服器的相容性"
+          }
+        }
+      }
+    },
+    "Client ID": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        }
+      }
+    },
+    "Connect to any SMART on FHIR server": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連線到任何支援 SMART on FHIR 的伺服器"
+          }
+        }
+      }
+    },
+    "Connecting…": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連線中…"
+          }
+        }
+      }
+    },
+    "Couldn't complete sign-in.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法完成登入。"
+          }
+        }
+      }
+    },
+    "Couldn't complete sign-in: %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法完成登入：%@"
+          }
+        }
+      }
+    },
+    "Couldn't read this server's SMART configuration.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法讀取此伺服器的 SMART 設定。"
+          }
+        }
+      }
+    },
+    "Couldn't read this server's SMART configuration: %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法讀取此伺服器的 SMART 設定：%@"
+          }
+        }
+      }
+    },
+    "FHIR server address": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FHIR 伺服器位址"
+          }
+        }
+      }
+    },
+    "Female": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "女"
+          }
+        }
+      }
+    },
+    "Local SMART Launcher": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本機 SMART Launcher"
+          }
+        }
+      }
+    },
+    "Male": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "男"
+          }
+        }
+      }
+    },
+    "Name or record number": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "姓名或病歷號"
+          }
+        }
+      }
+    },
+    "No patients on this server": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個伺服器上沒有病人資料"
+          }
+        }
+      }
+    },
+    "Not implemented yet": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未實作"
+          }
+        }
+      }
+    },
+    "Not recorded": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未紀錄"
+          }
+        }
+      }
+    },
+    "Other": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他"
+          }
+        }
+      }
+    },
+    "Patients": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "病人"
+          }
+        }
+      }
+    },
+    "Planned": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待實作"
+          }
+        }
+      }
+    },
+    "Quick fill": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速填入"
+          }
+        }
+      }
+    },
+    "SMART public sandbox": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMART 公開 Sandbox"
+          }
+        }
+      }
+    },
+    "Sign In": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入"
+          }
+        }
+      }
+    },
+    "Sign Out": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登出"
+          }
+        }
+      }
+    },
+    "Sign-in cancelled.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消登入。"
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "發生未預期的錯誤"
+          }
+        }
+      }
+    },
+    "That doesn't look like a valid server address.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這不是有效的伺服器位址。"
+          }
+        }
+      }
+    },
+    "That server address isn't valid.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器位址不正確。"
+          }
+        }
+      }
+    },
+    "The server denied this sign-in.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器拒絕了這次登入。"
+          }
+        }
+      }
+    },
+    "The server rejected this request.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器拒絕了這個請求。"
+          }
+        }
+      }
+    },
+    "The server responded in an unexpected way.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器回應異常。"
+          }
+        }
+      }
+    },
+    "The server's response couldn't be read as FHIR.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器的回應無法解讀為 FHIR 格式。"
+          }
+        }
+      }
+    },
+    "The service started by Server/docker-compose.yml": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server/docker-compose.yml 起的服務"
+          }
+        }
+      }
+    },
+    "The sign-in response failed verification. Please try again.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入回應驗證失敗，請重新登入。"
+          }
+        }
+      }
+    },
+    "This proof of concept covers sign-in and the patient list.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個 PoC 先做通登入與病人清單。"
+          }
+        }
+      }
+    },
+    "This server doesn't support the sign-in method this app uses.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此伺服器不支援本 app 使用的登入方式。"
+          }
+        }
+      }
+    },
+    "Tideng": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提燈"
+          }
+        }
+      }
+    },
+    "Today's Tasks": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日待辦"
+          }
+        }
+      }
+    },
+    "Try Again": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新載入"
+          }
+        }
+      }
+    },
+    "Unnamed": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名"
+          }
+        }
+      }
+    },
+    "Vital Signs": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生命徵象"
+          }
+        }
+      }
+    },
+    "Your session has expired. Sign in again to continue.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入已過期，請重新登入。"
+          }
+        }
+      }
+    },
+    "client_id": {
+      "shouldTranslate": false
+    },
+    "https://example.org/fhir": {
+      "shouldTranslate": false
+    },
+    "· %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        }
+      }
+    },
+    "· %lld yrs": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %lld 歲"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
