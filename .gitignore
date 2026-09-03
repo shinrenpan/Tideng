@@ -1,0 +1,13 @@
+.DS_Store
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+build/
+.build/
+.swiftpm/
+*.moved-aside
+
+# Server 本地資料
+Server/.env
+Server/pgdata/

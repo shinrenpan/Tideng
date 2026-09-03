@@ -1,0 +1,49 @@
+# Tideng 本地開發環境
+#
+# Phase A（現在）：smart-launcher-v2 擋在前面模擬 SMART authorize/token/discovery，
+#                  後端先接公開的 HAPI R4 server —— 不必等 Siming 就位就能開發登入流程。
+# Phase B（之後）：把 FHIR_SERVER_R4 換成 http://siming:8080，並把 siming / postgres
+#                  兩個服務取消註解。iPad 端只換 base URL，client 程式碼零修改。
+
+services:
+  smart-launcher:
+    image: smartonfhir/smart-launcher-2:latest
+    container_name: tideng-smart-launcher
+    ports:
+      - "8090:80"
+    environment:
+      NODE_ENV: production
+      PORT: 80
+      # 開發用，不是機密。正式部署必須換掉。
+      SECRET: tideng-local-dev-secret
+      FHIR_SERVER_R4: "https://hapi.fhir.org/baseR4"
+      # 只留 R4，關掉其他版本避免 launcher UI 出現用不到的選項。
+      FHIR_SERVER_R2: ""
+      FHIR_SERVER_R3: ""
+      # access token 壽命（分鐘）。設短一點，好驗證 refresh 流程。
+      ACCESS_TOKEN_LIFETIME: 5
+    restart: unless-stopped
+
+# --- Phase B 才啟用 ---
+#
+#  siming:
+#    build: ../../Siming          # 與 Tideng 平行 clone
+#    container_name: tideng-siming
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      DATABASE_URL: postgres://siming:siming@postgres:5432/siming
+#      # Phase A/B 的信任邊界：launcher 在前面時 Siming 的 JWT 驗證關閉
+#      SMART_JWT_VERIFICATION: "false"
+#    depends_on:
+#      - postgres
+#
+#  postgres:
+#    image: postgres:16-alpine
+#    container_name: tideng-postgres
+#    environment:
+#      POSTGRES_USER: siming
+#      POSTGRES_PASSWORD: siming
+#      POSTGRES_DB: siming
+#    volumes:
+#      - ./pgdata:/var/lib/postgresql/data
