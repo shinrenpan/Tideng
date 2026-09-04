@@ -250,6 +250,11 @@ pending ──flush──► syncing ──2xx──► synced（保留 7 天後
 
 ## 6. Siming 端缺口檢查清單（動工前勾完）
 
+> **實測結果（2026-09-04）**：S1、S2、S3、S5 已實際驗過，逐項結果記在
+> [`STATUS.md` §2.5](STATUS.md)。摘要：S2 conditional create 可用（seed 靠它做冪等）；
+> S1 缺 `PractitionerRole`；S3 的 `Observation?date=` **宣稱支援但完全無效**；
+> **S5 batch 不支援**——那一項就是 §0 第二個關鍵判斷的阻斷點。
+
 | # | 檢查項 | 驗證方法 | 不足時的動作 |
 |---|---|---|---|
 | S1 | 8 個 resource types 齊備：Patient, Practitioner, Encounter, Location, Observation, MedicationRequest, MedicationAdministration, AuditEvent | 看 CapabilityStatement | generator 補 type |
@@ -261,6 +266,16 @@ pending ──flush──► syncing ──2xx──► synced（保留 7 天後
 | S7 | （可延後）ETag + `If-Match` 412 | curl | Phase B 前補 |
 
 ## 7. Seed 資料腳本（scripts/seed-ward.sh）
+
+> **修訂（實作後）**：實際做成 **`Server/seed/` 的 Swift executable**，不是 shell 腳本。
+> 理由：資源要用 FHIRModels 建構才能保證型別與欄位合規，用 shell 拼 JSON 等於把型別檢查
+> 丟掉；而且 seed 與 app 共用同一套 `FHIRCore`，型別漂移會在編譯期就爆。
+>
+> 內容也隨客戶輪廓改變而不同——**小診所沒有病房與床位**，所以沒有 `Location` 樹、沒有
+> in-progress `Encounter` census，改成門診就診紀錄。灌入方式不是 transaction Bundle 而是
+> **逐筆 POST 帶 `If-None-Exist`**（Siming 不支援 batch，見 §0 第二點）。
+>
+> 實際產出與三種資料形狀的用意見 [`../Server/README.md`](../Server/README.md)。
 
 - 1 個 `Location`（病房）+ 20 張床（Location partOf）
 - 20 個 `Patient` + 對應 in-progress `Encounter`（TW Core profile）

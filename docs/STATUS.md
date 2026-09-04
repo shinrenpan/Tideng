@@ -2,9 +2,10 @@
 
 *更新於 2026-09-04*
 
-第一個 PoC 已完成並實際跑通：**輸入任意 FHIR base URL → SMART standalone 登入 → 側邊欄
-主畫面 + 病人清單**。登入不是模擬的——`Practitioner` reference 由 `id_token` 的 `fhirUser`
-claim 解出，病人清單帶著 Bearer token 從 FHIR server 取得。
+已實際跑通的完整路徑：**輸入任意 FHIR base URL → SMART standalone 登入 → 側邊欄主畫面
+→ 病人切片 grid → 病人清單 → 病人詳情與生命徵象趨勢圖**。登入不是模擬的——`Practitioner`
+reference 由 `id_token` 的 `fhirUser` claim 解出，所有臨床資料都帶著 Bearer token 從 FHIR
+server 取得。
 
 ---
 
@@ -38,8 +39,8 @@ demo 階段只能靠 Siming 或公開 sandbox。
 
 | 項目 | 位置 |
 |---|---|
-| FHIR 命名空間、LOINC 常數、Bundle helper | `App/Packages/FHIRCore` |
-| REST client、search builder、錯誤三分類 | `App/Packages/FHIRClient`（11 個測試） |
+| FHIR 命名空間、LOINC 常數、Bundle helper、容錯解碼、參考範圍三態 | `App/Packages/FHIRCore`（37 個測試） |
+| REST client、search builder、錯誤三分類 | `App/Packages/FHIRClient`（22 個測試） |
 | SMART：discovery、能力檢查、PKCE、`state`、`aud`、token 交換、refresh 序列化、Keychain、瀏覽器授權 | `App/Packages/SmartAuth`（31 個測試） |
 | 登入畫面（base URL + preset + 進階 client_id） | `Sources/Pages/ServerSetup` |
 | 側邊欄主畫面（`NavigationSplitView`） | `Sources/Pages/Main` |
@@ -53,6 +54,8 @@ Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-deta
 產出四個正式 capability（`clinical-dashboard`、`patient-list`、`patient-detail`、`demo-data`）。
 其中兩條是這個產品的法規界線，現在寫在正式規格裡而非埋在某個 change 目錄：
 **使用者可見文字只陳述事實不做判讀**、**超出參考值只採用 server 提供的 referenceRange**。
+
+三個 package 共 90 個測試，app target 另有 72 個。
 
 測試裡值得一提的三個：PKCE 用 **RFC 7636 附錄 B 的官方測試向量**驗證（證明符合規格而非
 自洽）；`aud` 參數有獨立測試（SMART 最常被漏、漏了部分 server 直接拒絕）；**10 個並發請求
@@ -80,7 +83,7 @@ Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-deta
 
 ## 2.5 Siming 的能力缺口（實測，2026-09-04）
 
-接上 Siming 後實際確認的三項落差。記在這裡而不是默默繞過——其中一項會擋住 tech spec 的核心設計。
+接上 Siming 後實際確認的五項落差。記在這裡而不是默默繞過——其中一項會擋住 tech spec 的核心設計。
 
 | 缺口 | 影響 | 後續 |
 |---|---|---|

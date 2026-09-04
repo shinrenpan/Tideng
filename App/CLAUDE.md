@@ -13,6 +13,7 @@ App/
     App/            AppRouter, Deeplink, SceneDelegate, AppConfiguration
     Pages/          MVVMC features, one directory each
     Shared/         Business-agnostic infrastructure only
+  Resources/        Localizable.xcstrings, assets
   Packages/         FHIRCore, FHIRClient, SmartAuth (local SPM)
 Server/             docker-compose for smart-launcher-v2 (dev auth server)
 docs/               Product and technical specs
@@ -22,9 +23,17 @@ docs/               Product and technical specs
 
 ```bash
 xcodegen generate                    # REQUIRED after adding/removing/moving any file
+
+# -derivedDataPath build is not optional: the localization step below looks for
+# .stringsdata under ./build, and without it Xcode hides them in ~/Library.
 xcodebuild -project Tideng.xcodeproj -scheme Tideng \
   -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5)' \
-  build CODE_SIGNING_ALLOWED=NO
+  -derivedDataPath build build CODE_SIGNING_ALLOWED=NO
+
+xcodebuild -project Tideng.xcodeproj -scheme Tideng \
+  -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5)' \
+  test CODE_SIGNING_ALLOWED=NO    # app target
+
 cd Packages/<name> && swift test     # package tests
 cd ../Server && docker-compose up -d # local SMART launcher (needs `colima start`)
 ```

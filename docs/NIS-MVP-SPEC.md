@@ -50,6 +50,8 @@
 ## 3. Server 環境（已存在，不在本專案範圍內開發）
 
 1. **Siming** — 自寫的 Swift FHIR R4 server（Hummingbird 2 + PostgresNIO + FHIRModels），TW Core IG v1.0.0 驗證通過，支援 transaction bundle、SMART JWT bearer 驗證（resource server 端）。跑在內網 `http://192.168.0.200:8080`。
+   （**修訂**：開發期實際跑在 `localhost:8080`，資料庫另開 `siming_demo` 不動既有資料，
+   啟動方式見 [`../Server/README.md`](../Server/README.md)。）
 2. **smart-launcher-v2**（SMART Health IT，自架 Docker）— 擋在 Siming 前面模擬 SMART authorize/token/discovery 流程。開發期的 auth 由它負責。
 3. **SMART Health IT 公開 sandbox**（`launcher.smarthealthit.org`）— 用來驗證 client 實作對其他 server 的相容性。
 
