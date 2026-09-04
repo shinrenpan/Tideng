@@ -68,6 +68,20 @@ extension MainViewModel {
     static var initialStates: [PatientSlice: SliceState] {
       Dictionary(uniqueKeysWithValues: allCases.map { ($0, SliceState()) })
     }
+
+    /// 這個切片最多跟隨幾頁。
+    ///
+    /// 只有「超出參考值」需要多頁：它得把觀測值撈回 client 端逐筆比對，而 server
+    /// 未必支援時間過濾或按時間排序（實測 Siming 兩者都沒有）。只取第一頁時，
+    /// 抽到的那批可能完全不含異常值，卡片就會安靜地顯示 0。
+    ///
+    /// 其餘切片查的是病人、就診或用藥，數量級小得多，一頁就夠。
+    var maxPages: Int {
+      switch self {
+      case .outOfRange: 3
+      case .all, .seenToday, .onMedication: 1
+      }
+    }
   }
 }
 

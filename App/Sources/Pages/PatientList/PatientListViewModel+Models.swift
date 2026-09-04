@@ -143,6 +143,14 @@ extension PatientListViewModel.PatientGender {
 
 extension PatientListViewModel.Slice {
 
+  /// 與主畫面同一套理由：只有「超出參考值」需要多頁取樣。
+  var maxPages: Int {
+    switch self {
+    case .outOfRange: 3
+    case .all, .seenToday, .onMedication: 1
+    }
+  }
+
   var search: FHIRSearch {
     switch self {
     case .all: .patients()

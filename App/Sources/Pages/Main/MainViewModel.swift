@@ -127,7 +127,7 @@ private extension MainViewModel {
     case let .loadSliceCount(slice):
       state.slices[slice]?.status = .loading
       do {
-        let bundle = try await client.search(searchFor(slice))
+        let bundle = try await client.search(searchFor(slice), maxPages: slice.maxPages)
         await doAction(.apiResponse(.sliceCount(slice, .success(bundle))))
       } catch let error as FHIRClientError {
         await doAction(.apiResponse(.sliceCount(slice, .failure(error))))

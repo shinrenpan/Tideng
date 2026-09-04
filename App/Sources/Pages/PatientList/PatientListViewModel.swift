@@ -82,7 +82,7 @@ private extension PatientListViewModel {
     case .loadPatients:
       state.api.loadPatients = .loading
       do {
-        let response = try await client.search(state.slice.search)
+        let response = try await client.search(state.slice.search, maxPages: state.slice.maxPages)
         await doAction(.apiResponse(.patients(.success(response))))
       } catch let error as FHIRClientError {
         await doAction(.apiResponse(.patients(.failure(error))))

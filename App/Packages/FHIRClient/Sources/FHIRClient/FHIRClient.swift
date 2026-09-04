@@ -35,6 +35,46 @@ public actor FHIRClient {
         try await fetchBundle(from: url(for: search))
     }
 
+    /// 跟隨 `next` 連結取回多頁，合併成單一結果。
+    ///
+    /// 需要它是因為不能假設 server 支援時間過濾或排序。實測 Siming：`date` 參數宣稱
+    /// 支援卻完全無效，而預設排序也不是時間序——於是「近 24 小時超出參考值」如果只取
+    /// 第一頁，抽到的那 100 筆可能完全不含異常值，卡片就會安靜地顯示 0。
+    ///
+    /// - Parameter maxPages: 最多取幾頁。這是取樣邊界，不是完整性保證——
+    ///   仍有下一頁時結果會標記為不完整，呼叫端據此把計數降級為下限值。
+    public func search(_ search: FHIRSearch, maxPages: Int) async throws -> FHIRBundleDecoder.Result {
+        precondition(maxPages >= 1, "至少要取一頁")
+
+        var results: [FHIRBundleDecoder.Result] = [try await self.search(search)]
+
+        while results.count < maxPages, let next = results.last?.bundle.nextPageURL {
+            results.append(try await fetchBundle(from: next))
+        }
+
+        return Self.merge(results)
+    }
+
+    /// 把多頁合併成單一 bundle，讓呼叫端不必知道分頁的存在。
+    private static func merge(_ results: [FHIRBundleDecoder.Result]) -> FHIRBundleDecoder.Result {
+        guard let first = results.first else {
+            return .init(bundle: FHIR.Bundle(type: FHIRPrimitive(BundleType.searchset)), skippedEntries: 0, decodedEntries: 0)
+        }
+        guard results.count > 1 else { return first }
+
+        var merged = FHIR.Bundle(type: FHIRPrimitive(BundleType.searchset))
+        merged.entry = results.flatMap { $0.bundle.entry ?? [] }
+        // total 沿用 server 的說法；還有沒有下一頁看最後一頁
+        merged.total = first.bundle.total
+        merged.link = results.last?.bundle.link
+
+        return .init(
+            bundle: merged,
+            skippedEntries: results.reduce(0) { $0 + $1.skippedEntries },
+            decodedEntries: results.reduce(0) { $0 + $1.decodedEntries }
+        )
+    }
+
     /// 跟隨 server 給的 `next` 連結取下一頁；沒有下一頁時回 `nil`。
     ///
     /// 不自己拼 offset——server 可能是 cursor 分頁。

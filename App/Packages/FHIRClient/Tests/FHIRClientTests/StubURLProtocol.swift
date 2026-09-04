@@ -23,6 +23,10 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         lock.withLock { recorded.last }
     }
 
+    static var requestCount: Int {
+        lock.withLock { recorded.count }
+    }
+
     /// 專用於測試的 session，只走這個 stub。
     static func makeSession() -> URLSession {
         let config = URLSessionConfiguration.ephemeral

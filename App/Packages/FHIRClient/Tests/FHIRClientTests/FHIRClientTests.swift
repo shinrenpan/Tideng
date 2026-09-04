@@ -4,194 +4,198 @@ import FHIRCore
 @testable import FHIRClient
 
 /// 共用 stub 的靜態狀態，必須序列化執行。
-@Suite(.serialized)
-struct FHIRClientTests {
+extension StubBackedTests {
 
-    private let base = URL(string: "http://example.org/fhir")!
+  @Suite
+  struct FHIRClientTests {
 
-    private func makeClient() throws -> FHIRClient {
-        try FHIRClient(baseURL: base, session: StubURLProtocol.makeSession())
-    }
+      private let base = URL(string: "http://example.org/fhir")!
 
-    // MARK: - base URL 是不受信任輸入
+      private func makeClient() throws -> FHIRClient {
+          try FHIRClient(baseURL: base, session: StubURLProtocol.makeSession())
+      }
 
-    @Test("非 http/https 的 base URL 被拒絕")
-    func rejectsNonHTTPScheme() throws {
-        for raw in ["file:///etc/passwd", "ftp://example.org/fhir", "javascript:alert(1)"] {
-            let url = URL(string: raw)!
-            #expect(throws: FHIRClientError.self) {
-                _ = try FHIRClient(baseURL: url)
-            }
-        }
-    }
+      // MARK: - base URL 是不受信任輸入
 
-    @Test("http 與 https 都接受")
-    func acceptsHTTPAndHTTPS() throws {
-        _ = try FHIRClient(baseURL: URL(string: "http://192.168.0.200:8080/fhir")!)
-        _ = try FHIRClient(baseURL: URL(string: "https://hapi.fhir.org/baseR4")!)
-    }
+      @Test("非 http/https 的 base URL 被拒絕")
+      func rejectsNonHTTPScheme() throws {
+          for raw in ["file:///etc/passwd", "ftp://example.org/fhir", "javascript:alert(1)"] {
+              let url = URL(string: raw)!
+              #expect(throws: FHIRClientError.self) {
+                  _ = try FHIRClient(baseURL: url)
+              }
+          }
+      }
 
-    // MARK: - 送出的請求
+      @Test("http 與 https 都接受")
+      func acceptsHTTPAndHTTPS() throws {
+          _ = try FHIRClient(baseURL: URL(string: "http://192.168.0.200:8080/fhir")!)
+          _ = try FHIRClient(baseURL: URL(string: "https://hapi.fhir.org/baseR4")!)
+      }
 
-    @Test("search 組出正確的 path、query 與 header")
-    func buildsSearchRequest() async throws {
-        StubURLProtocol.stub(body: Fixtures.mixedSearchset)
-        let client = try makeClient()
+      // MARK: - 送出的請求
 
-        _ = try await client.search(.vitalSigns(patientID: "p1", count: 20))
+      @Test("search 組出正確的 path、query 與 header")
+      func buildsSearchRequest() async throws {
+          StubURLProtocol.stub(body: Fixtures.mixedSearchset)
+          let client = try makeClient()
 
-        let request = try #require(StubURLProtocol.lastRequest)
-        let url = try #require(request.url)
-        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+          _ = try await client.search(.vitalSigns(patientID: "p1", count: 20))
 
-        #expect(components.path == "/fhir/Observation")
-        let query = Dictionary(uniqueKeysWithValues: (components.queryItems ?? []).map { ($0.name, $0.value) })
-        #expect(query["patient"] == "p1")
-        #expect(query["category"] == "vital-signs")
-        #expect(query["_sort"] == "-date")
-        #expect(query["_count"] == "20")
-        #expect(request.value(forHTTPHeaderField: "Accept") == "application/fhir+json")
-    }
+          let request = try #require(StubURLProtocol.lastRequest)
+          let url = try #require(request.url)
+          let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
 
-    @Test("沒有 token provider 時不帶 Authorization header")
-    func omitsAuthorizationWhenUnauthenticated() async throws {
-        StubURLProtocol.stub(body: Fixtures.mixedSearchset)
-        let client = try makeClient()
+          #expect(components.path == "/fhir/Observation")
+          let query = Dictionary(uniqueKeysWithValues: (components.queryItems ?? []).map { ($0.name, $0.value) })
+          #expect(query["patient"] == "p1")
+          #expect(query["category"] == "vital-signs")
+          #expect(query["_sort"] == "-date")
+          #expect(query["_count"] == "20")
+          #expect(request.value(forHTTPHeaderField: "Accept") == "application/fhir+json")
+      }
 
-        _ = try await client.search(.patients())
+      @Test("沒有 token provider 時不帶 Authorization header")
+      func omitsAuthorizationWhenUnauthenticated() async throws {
+          StubURLProtocol.stub(body: Fixtures.mixedSearchset)
+          let client = try makeClient()
 
-        let request = try #require(StubURLProtocol.lastRequest)
-        #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
-    }
+          _ = try await client.search(.patients())
 
-    @Test("有 token 時帶上 Bearer")
-    func attachesBearerToken() async throws {
-        struct FixedToken: TokenProviding {
-            func validToken() async throws -> String? { "abc123" }
-        }
-        StubURLProtocol.stub(body: Fixtures.mixedSearchset)
-        let client = try FHIRClient(
-            baseURL: base,
-            tokenProvider: FixedToken(),
-            session: StubURLProtocol.makeSession()
-        )
+          let request = try #require(StubURLProtocol.lastRequest)
+          #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+      }
 
-        _ = try await client.search(.patients())
+      @Test("有 token 時帶上 Bearer")
+      func attachesBearerToken() async throws {
+          struct FixedToken: TokenProviding {
+              func validToken() async throws -> String? { "abc123" }
+          }
+          StubURLProtocol.stub(body: Fixtures.mixedSearchset)
+          let client = try FHIRClient(
+              baseURL: base,
+              tokenProvider: FixedToken(),
+              session: StubURLProtocol.makeSession()
+          )
 
-        let request = try #require(StubURLProtocol.lastRequest)
-        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer abc123")
-    }
+          _ = try await client.search(.patients())
 
-    @Test("讀取單一 practitioner 組出正確路徑")
-    func readsPractitioner() async throws {
-        // read 用 String(describing:) 推導 resource type。FHIR.Practitioner 是 typealias，
-        // 若 describing 給出的不是 "Practitioner"，path 就會錯——這條測的就是那件事。
-        StubURLProtocol.stub(body: Data(#"{"resourceType":"Practitioner","id":"137594487"}"#.utf8))
-        let client = try makeClient()
+          let request = try #require(StubURLProtocol.lastRequest)
+          #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer abc123")
+      }
 
-        let practitioner = try await client.read(FHIR.Practitioner.self, id: "137594487")
+      @Test("讀取單一 practitioner 組出正確路徑")
+      func readsPractitioner() async throws {
+          // read 用 String(describing:) 推導 resource type。FHIR.Practitioner 是 typealias，
+          // 若 describing 給出的不是 "Practitioner"，path 就會錯——這條測的就是那件事。
+          StubURLProtocol.stub(body: Data(#"{"resourceType":"Practitioner","id":"137594487"}"#.utf8))
+          let client = try makeClient()
 
-        let url = try #require(StubURLProtocol.lastRequest?.url?.absoluteString)
-        #expect(url == "http://example.org/fhir/Practitioner/137594487")
-        #expect(practitioner.id?.value?.string == "137594487")
-    }
+          let practitioner = try await client.read(FHIR.Practitioner.self, id: "137594487")
 
-    // MARK: - 回應解析
+          let url = try #require(StubURLProtocol.lastRequest?.url?.absoluteString)
+          #expect(url == "http://example.org/fhir/Practitioner/137594487")
+          #expect(practitioner.id?.value?.string == "137594487")
+      }
 
-    @Test("從混合 bundle 中依型別取出資源")
-    func extractsResourcesByType() async throws {
-        StubURLProtocol.stub(body: Fixtures.mixedSearchset)
-        let client = try makeClient()
+      // MARK: - 回應解析
 
-        let bundle = try await client.search(.patients()).bundle
+      @Test("從混合 bundle 中依型別取出資源")
+      func extractsResourcesByType() async throws {
+          StubURLProtocol.stub(body: Fixtures.mixedSearchset)
+          let client = try makeClient()
 
-        let patients = bundle.resources(of: FHIR.Patient.self)
-        let encounters = bundle.resources(of: FHIR.Encounter.self)
-        #expect(patients.count == 2)
-        #expect(encounters.count == 1)
-        #expect(patients.first?.id?.value?.string == "p1")
-        #expect(bundle.searchTotal == 2)
-    }
+          let bundle = try await client.search(.patients()).bundle
 
-    @Test("跟隨 next 連結取下一頁")
-    func followsNextLink() async throws {
-        StubURLProtocol.stub(body: Fixtures.mixedSearchset)
-        let client = try makeClient()
-        let first = try await client.search(.patients()).bundle
+          let patients = bundle.resources(of: FHIR.Patient.self)
+          let encounters = bundle.resources(of: FHIR.Encounter.self)
+          #expect(patients.count == 2)
+          #expect(encounters.count == 1)
+          #expect(patients.first?.id?.value?.string == "p1")
+          #expect(bundle.searchTotal == 2)
+      }
 
-        StubURLProtocol.stub(body: Fixtures.lastPage)
-        let second = try await client.nextPage(after: first)?.bundle
+      @Test("跟隨 next 連結取下一頁")
+      func followsNextLink() async throws {
+          StubURLProtocol.stub(body: Fixtures.mixedSearchset)
+          let client = try makeClient()
+          let first = try await client.search(.patients()).bundle
 
-        #expect(second != nil)
-        let requestedURL = try #require(StubURLProtocol.lastRequest?.url?.absoluteString)
-        #expect(requestedURL == "http://example.org/fhir/Patient?_count=50&page=2")
-    }
+          StubURLProtocol.stub(body: Fixtures.lastPage)
+          let second = try await client.nextPage(after: first)?.bundle
 
-    @Test("最後一頁沒有 next，回 nil")
-    func stopsAtLastPage() async throws {
-        StubURLProtocol.stub(body: Fixtures.lastPage)
-        let client = try makeClient()
-        let bundle = try await client.search(.patients()).bundle
+          #expect(second != nil)
+          let requestedURL = try #require(StubURLProtocol.lastRequest?.url?.absoluteString)
+          #expect(requestedURL == "http://example.org/fhir/Patient?_count=50&page=2")
+      }
 
-        let next = try await client.nextPage(after: bundle)?.bundle
-        #expect(next == nil)
-    }
+      @Test("最後一頁沒有 next，回 nil")
+      func stopsAtLastPage() async throws {
+          StubURLProtocol.stub(body: Fixtures.lastPage)
+          let client = try makeClient()
+          let bundle = try await client.search(.patients()).bundle
 
-    // MARK: - 錯誤分類
+          let next = try await client.nextPage(after: bundle)?.bundle
+          #expect(next == nil)
+      }
 
-    @Test("401 與 403 都歸類為需要重新登入", arguments: [401, 403])
-    func classifiesAuthErrors(status: Int) async throws {
-        StubURLProtocol.stub(status: status)
-        let client = try makeClient()
+      // MARK: - 錯誤分類
 
-        await #expect(throws: FHIRClientError.self) {
-            _ = try await client.search(.patients())
-        }
-        do {
-            _ = try await client.search(.patients())
-            Issue.record("預期要拋錯")
-        } catch let error as FHIRClientError {
-            guard case .unauthorized = error else {
-                Issue.record("預期 .unauthorized，實際是 \(error)")
-                return
-            }
-        }
-    }
+      @Test("401 與 403 都歸類為需要重新登入", arguments: [401, 403])
+      func classifiesAuthErrors(status: Int) async throws {
+          StubURLProtocol.stub(status: status)
+          let client = try makeClient()
 
-    @Test("server 的 OperationOutcome 被解析出來供上層呈現")
-    func surfacesOperationOutcome() async throws {
-        StubURLProtocol.stub(status: 400, body: Fixtures.operationOutcome)
-        let client = try makeClient()
+          await #expect(throws: FHIRClientError.self) {
+              _ = try await client.search(.patients())
+          }
+          do {
+              _ = try await client.search(.patients())
+              Issue.record("預期要拋錯")
+          } catch let error as FHIRClientError {
+              guard case .unauthorized = error else {
+                  Issue.record("預期 .unauthorized，實際是 \(error)")
+                  return
+              }
+          }
+      }
 
-        do {
-            _ = try await client.search(.patients())
-            Issue.record("預期要拋錯")
-        } catch let error as FHIRClientError {
-            guard case let .operationOutcome(outcome, status) = error else {
-                Issue.record("預期 .operationOutcome，實際是 \(error)")
-                return
-            }
-            #expect(status == 400)
-            #expect(outcome.issue.count == 1)
-            // server 的說法要能原樣取出——那是唯一講得清楚哪裡不對的來源。
-            #expect(error.serverDiagnostics == "不支援的搜尋參數：_sort")
-        }
-    }
+      @Test("server 的 OperationOutcome 被解析出來供上層呈現")
+      func surfacesOperationOutcome() async throws {
+          StubURLProtocol.stub(status: 400, body: Fixtures.operationOutcome)
+          let client = try makeClient()
 
-    @Test("無法解析的錯誤回應退回狀態碼")
-    func fallsBackToStatusCode() async throws {
-        StubURLProtocol.stub(status: 503, body: Data("gateway down".utf8))
-        let client = try makeClient()
+          do {
+              _ = try await client.search(.patients())
+              Issue.record("預期要拋錯")
+          } catch let error as FHIRClientError {
+              guard case let .operationOutcome(outcome, status) = error else {
+                  Issue.record("預期 .operationOutcome，實際是 \(error)")
+                  return
+              }
+              #expect(status == 400)
+              #expect(outcome.issue.count == 1)
+              // server 的說法要能原樣取出——那是唯一講得清楚哪裡不對的來源。
+              #expect(error.serverDiagnostics == "不支援的搜尋參數：_sort")
+          }
+      }
 
-        do {
-            _ = try await client.search(.patients())
-            Issue.record("預期要拋錯")
-        } catch let error as FHIRClientError {
-            guard case let .unexpectedStatus(code) = error else {
-                Issue.record("預期 .unexpectedStatus，實際是 \(error)")
-                return
-            }
-            #expect(code == 503)
-        }
-    }
+      @Test("無法解析的錯誤回應退回狀態碼")
+      func fallsBackToStatusCode() async throws {
+          StubURLProtocol.stub(status: 503, body: Data("gateway down".utf8))
+          let client = try makeClient()
+
+          do {
+              _ = try await client.search(.patients())
+              Issue.record("預期要拋錯")
+          } catch let error as FHIRClientError {
+              guard case let .unexpectedStatus(code) = error else {
+                  Issue.record("預期 .unexpectedStatus，實際是 \(error)")
+                  return
+              }
+              #expect(code == 503)
+          }
+      }
+  }
+
 }
