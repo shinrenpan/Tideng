@@ -120,9 +120,9 @@ extension PatientListViewModel.Patient {
         day: $0.day.map(Int.init)
       )
     }
-    self.recordNumber = resource.identifier?
-      .compactMap { $0.value?.value?.string }
-      .first
+    // 認 MR 標記，不取「第一個 identifier」——第一個往往是內部識別碼。
+    // 沒有病歷號就留白，不拿其他 id 頂替。
+    self.recordNumber = resource.identifier?.medicalRecordNumber
   }
 
 }

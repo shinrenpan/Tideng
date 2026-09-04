@@ -92,8 +92,8 @@ struct PatientListViewModelTests {
     // 關鍵字沒有出現在姓名裡，只出現在病歷號——護理師常以病歷號找人。
     let viewModel = try makeViewModel()
     await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(try bundle(
-      #"{"resourceType":"Patient","id":"p1","name":[{"family":"王","given":["小明"]}],"identifier":[{"value":"A123456"}]}"#,
-      #"{"resourceType":"Patient","id":"p2","name":[{"family":"陳","given":["美玲"]}],"identifier":[{"value":"B999999"}]}"#
+      #"{"resourceType":"Patient","id":"p1","name":[{"family":"王","given":["小明"]}],"identifier":[{"type":{"coding":[{"code":"MR"}]},"value":"A123456"}]}"#,
+      #"{"resourceType":"Patient","id":"p2","name":[{"family":"陳","given":["美玲"]}],"identifier":[{"type":{"coding":[{"code":"MR"}]},"value":"B999999"}]}"#
     ))))))
 
     viewModel.state.keyword = "A123456"
@@ -323,9 +323,17 @@ struct PatientListPresentationTests {
   }
 
   @Test
-  func `有 identifier 時取第一個有值的`() throws {
-    let subject = try patient(#"{"resourceType":"Patient","id":"p1","identifier":[{"system":"urn:x"},{"value":"A123456"}]}"#)
+  func `取標記為 MR 的 identifier 而非第一個`() throws {
+    // 第一個往往是內部識別碼。把它當病歷號顯示，臨床人員會拿一個查不到的號碼去找人。
+    let subject = try patient(#"{"resourceType":"Patient","id":"p1","identifier":[{"system":"urn:internal","value":"patient-8"},{"type":{"coding":[{"code":"MR"}]},"value":"A123456"}]}"#)
     #expect(subject.recordNumber == "A123456")
+  }
+
+  @Test
+  func `沒有 MR 標記時不顯示病歷號`() throws {
+    // SMART sandbox 的病人只有 UUID——顯示它並標上「病歷號」是誤導。
+    let subject = try patient(#"{"resourceType":"Patient","id":"p1","identifier":[{"value":"73a7d6b7-0310-4fff-9b0b-7891a5e390f5"}]}"#)
+    #expect(subject.recordNumber == nil)
   }
 
   @Test

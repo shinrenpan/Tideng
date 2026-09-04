@@ -6,7 +6,7 @@
 ## 2. 開發環境接上 Siming
 
 - [x] 2.1 Siming 可在本機啟動並回應健康檢查，launcher 的後端指向它而非公開 server。落實 design 決策「Siming 獨立啟動，launcher 從 host 連過去」。驗證：curl Siming 的 `/metadata` 得到 CapabilityStatement，且經 launcher proxy 查詢 `Patient` 回傳 Bundle
-- [ ] 2.2 伺服器 preset 涵蓋接上 Siming 的位址，且與公開 sandbox 並列可切換。驗證：模擬器上兩個 preset 各登入一次皆成功——滿足 Requirement: The same app connects to a second server unchanged
+- [x] 2.2 伺服器 preset 涵蓋接上 Siming 的位址，且與公開 sandbox 並列可切換。驗證：模擬器上兩個 preset 各登入一次皆成功——滿足 Requirement: The same app connects to a second server unchanged
 - [x] 2.3 `Server/README.md` 說明兩段式啟動（先起 Siming、再起 launcher）與 `host.docker.internal` 的 macOS 限制。驗證：照文件從零走一次，服務可用
 
 ## 3. seed 工具

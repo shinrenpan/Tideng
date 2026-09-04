@@ -28,8 +28,9 @@ enum ResourceBuilder {
         var resource = FHIR.Patient()
         resource.identifier = [
             .make(system: SeedData.identifierSystem, value: value),
-            // 病歷號：診所實際會拿來找人的號碼
-            .make(system: SeedData.recordNumberSystem, value: String(format: "A%07d", spec.seq))
+            // 病歷號：診所實際會拿來找人的號碼。必須帶 MR 的 type coding，
+            // 否則 client 無從分辨它與上面那個灌資料用的內部 key。
+            .medicalRecord(system: SeedData.recordNumberSystem, value: String(format: "A%07d", spec.seq))
         ]
         resource.name = [humanName(family: spec.family, given: spec.given)]
         resource.gender = FHIRPrimitive(spec.gender)

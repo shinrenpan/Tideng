@@ -91,6 +91,25 @@ extension FHIR.Identifier {
     }
 }
 
+extension FHIR.Identifier {
+
+    /// 帶 `MR`（Medical Record Number）標記的病歷號。
+    ///
+    /// 沒有這個 type coding，client 只能猜哪個 identifier 是病歷號——而猜錯的後果是
+    /// 把內部 id 當成病歷號顯示給臨床人員看。
+    static func medicalRecord(system: String, value: String) -> FHIR.Identifier {
+        FHIR.Identifier(
+            system: FHIRPrimitive(FHIRURI(stringLiteral: system)),
+            type: .coded(
+                system: "http://terminology.hl7.org/CodeSystem/v2-0203",
+                code: "MR",
+                display: "病歷號"
+            ),
+            value: FHIRPrimitive(FHIRString(value))
+        )
+    }
+}
+
 extension FHIR.ObservationReferenceRange {
 
     /// server 提供的參考範圍。app 只認這個來源——內建常數等於由 app 定義何謂正常。
