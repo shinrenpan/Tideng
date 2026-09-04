@@ -85,7 +85,7 @@ Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-deta
 
 接上 Siming 後逐項實測的結果。記在這裡而不是默默繞過——其中一項會擋住 tech spec 的核心設計。
 
-**2026-09-05 更新**：其中三項已由 Siming 端修復並**合併進 main**（`4b07593`）——
+**2026-09-05 更新**：其中三項已由 Siming 端修復並發布為 **Siming v1.1.1**——
 `PractitionerRole`、刪除後仍被搜到、`date` 帶時間被忽略。已在 main 的 binary 上重灌驗證，
 Tideng 的五種查詢全數正確。
 
