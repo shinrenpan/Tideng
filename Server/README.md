@@ -106,8 +106,8 @@ http://localhost:8090/v/r4/sim/e30/fhir
   會得到互相矛盾的答案。24 個 store 有 20 個漂移
 - **`_count` 上限 100、`_sort` 只認五個欄位**（未知欄位靜默丟棄）
 
-`PractitionerRole`、「搜尋回傳已刪除資源」、「`date` 帶時間被忽略」三項已由 Siming 端修復，
-但還在 `fix/search-correctness` 分支上（⚠️ 尚未進 main，從 main clone 會回到有缺陷的版本）。
+`PractitionerRole`、「搜尋回傳已刪除資源」、「`date` 帶時間被忽略」三項已由 Siming 端修復
+並合併進 main（`4b07593`），拉最新的即可。
 
 由此得到的通則：**凡是 UI 對使用者宣告了範圍，那個範圍就必須在 client 端守住。**
 server 端的過濾對這個 app 是效能，不是正確性。
