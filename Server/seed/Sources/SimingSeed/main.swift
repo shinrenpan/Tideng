@@ -95,6 +95,16 @@ for spec in SeedData.practitionerRoles {
     practitionerRoleTally.record(outcome, identifier: identifier)
 }
 
+/// 有處方權的醫事人員。護理師不在其中。
+let prescriberIDs = SeedData.practitionerRoles
+    .filter { SeedData.prescriberRoleCodes.contains($0.code) }
+    .compactMap { practitionerIDBySeq[$0.seq] }
+
+guard !prescriberIDs.isEmpty else {
+    FileHandle.standardError.write(Data("沒有任何具處方權的醫事人員，MedicationRequest 無法指派 requester\n".utf8))
+    exit(1)
+}
+
 // MARK: - Patient
 
 var patientTally = SeedTally()
@@ -197,7 +207,8 @@ var medicationTally = SeedTally()
 for (index, medication) in medications.enumerated() {
     let seq = index + 1
     guard let patientID = patientIDs[seq] else { continue }
-    let practitionerID = practitionerIDs[seq % practitionerIDs.count]
+    // requester 只能是有處方權的人，不能沿用 Encounter 那條「所有人輪流」的路徑
+    let practitionerID = prescriberIDs[seq % prescriberIDs.count]
     let (resource, identifier) = ResourceBuilder.medicationRequest(
         patientID: patientID,
         practitionerID: practitionerID,

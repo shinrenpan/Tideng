@@ -55,7 +55,8 @@ enum SeedData {
     static let practitioners: [PersonSpec] = [
         .init(seq: 1, family: "何", given: "宗霖", gender: .male,   birthYear: 1975, birthMonth: 5, birthDay: 10),
         .init(seq: 2, family: "簡", given: "怡君", gender: .female, birthYear: 1982, birthMonth: 8, birthDay: 22),
-        .init(seq: 3, family: "邱", given: "承翰", gender: .male,   birthYear: 1968, birthMonth: 2, birthDay: 14)
+        .init(seq: 3, family: "邱", given: "承翰", gender: .male,   birthYear: 1968, birthMonth: 2, birthDay: 14),
+        .init(seq: 4, family: "康", given: "雅琳", gender: .female, birthYear: 1990, birthMonth: 11, birthDay: 7)
     ]
 
     // MARK: - 生命徵象的種類
@@ -129,11 +130,20 @@ enum SeedData {
         let text: String
     }
 
+    /// 2 位醫師 + 2 位護理師。小診所的護理人力通常多於醫師，反過來的比例一看就假。
     static let practitionerRoles: [RoleSpec] = [
         .init(seq: 1, code: "doctor", codeDisplay: "Doctor", text: "主治醫師"),
         .init(seq: 2, code: "nurse",  codeDisplay: "Nurse",  text: "護理師"),
-        .init(seq: 3, code: "doctor", codeDisplay: "Doctor", text: "主治醫師")
+        .init(seq: 3, code: "doctor", codeDisplay: "Doctor", text: "主治醫師"),
+        .init(seq: 4, code: "nurse",  codeDisplay: "Nurse",  text: "護理師")
     ]
+
+    /// 有處方權的角色碼。
+    ///
+    /// 護理師不能開處方——輪流指派 requester 時若不看角色，就會出現「護理師開了
+    /// 4 張處方」這種一眼看穿的資料。之前三個人在資料上完全同構所以看不出來，
+    /// 補上角色之後這個問題才浮現。
+    static let prescriberRoleCodes: Set<String> = ["doctor"]
 
     /// 初診病人：只有最近一次紀錄，沒有可比較的歷史。
     ///
