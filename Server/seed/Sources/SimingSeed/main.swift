@@ -120,13 +120,21 @@ for spec in SeedData.patients {
     // 少於這個範圍就看不出走勢，而走勢正是趨勢圖存在的理由。
     let isRising = SeedData.outOfRangeSequences.contains(spec.seq)
 
-    for (index, hoursAgo) in SeedData.observationHoursAgo.enumerated() {
+    // 初診病人只有最新那一次紀錄——診所本來就會有這種病人，
+    // 順帶讓「單點也要畫得出來」這件事在真實資料上看得到。
+    let timeline: [(index: Int, hoursAgo: Double)] =
+        SeedData.firstVisitSequences.contains(spec.seq)
+        ? [(SeedData.observationHoursAgo.count - 1, SeedData.observationHoursAgo[SeedData.observationHoursAgo.count - 1])]
+        : SeedData.observationHoursAgo.enumerated().map { (index: $0.offset, hoursAgo: $0.element) }
+
+    for (index, hoursAgo) in timeline {
         for vital in SeedData.vitals {
             observationSeq += 1
 
-            // 只有帶參考範圍的項目才走 rising 到超出範圍；沒有範圍的項目
-            // 即使數值下降也不該被判定為異常，那是 app 要證明的事。
-            let trend = (isRising && vital.low != nil) ? vital.rising : vital.steady
+            // 走勢惡化的病人，四項生命徵象一律走 rising——血氧也不例外。
+            // 血氧沒有參考範圍，所以它會是一條明顯下降、卻不帶任何判定的線；
+            // 那正是「沒有依據就不判讀」要示範的東西。
+            let trend = isRising ? vital.rising : vital.steady
             let value = trend[min(index, trend.count - 1)]
 
             let (resource, identifier) = ResourceBuilder.observation(

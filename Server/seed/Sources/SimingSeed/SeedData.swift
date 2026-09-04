@@ -111,4 +111,10 @@ enum SeedData {
 
     /// 走勢惡化、最新數值落在參考範圍外的病人。
     static let outOfRangeSequences = Set([2, 5, 7])
+
+    /// 初診病人：只有最近一次紀錄，沒有可比較的歷史。
+    ///
+    /// 這種病人在診所裡本來就存在，而且他讓「單一觀測值也要畫得出來」
+    /// 不必靠 Preview 才驗得到——在真實資料上就看得見。
+    static let firstVisitSequences = Set([20])
 }
