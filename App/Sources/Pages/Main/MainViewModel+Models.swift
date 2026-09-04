@@ -179,8 +179,11 @@ extension MainViewModel.SliceCount {
 
     case .seenToday:
       // 時間窗必須在 client 端再守一次，理由與 outOfRange 相同：卡片文案宣告了
-      // 「今日」，那個宣告就必須為真。實測 Siming 的 `Encounter?date=` 完全沒有
-      // 作用——連純日期的形式都不生效，送 `date=ge2099-01-01` 照樣回傳全部。
+      // 「今日」，那個宣告就必須為真。
+      //
+      // 這裡不只是「server 可能有 bug」——server 端的 `Encounter?date=` 就算完全正確也答不出這張卡片要的東西：
+      // 沒有 `period.end` 的就診在 FHIR 裡代表「進行中／結束時間未知」，任何
+      // `ge` 查詢都會命中它；而純日期的時區解讀是規範未定案的地帶（見 STATUS §2.5）。
       let subjects = bundle.resources(of: FHIR.Encounter.self)
         .filter { $0.started(on: Date()) }
         .map(\.subject)
@@ -190,9 +193,10 @@ extension MainViewModel.SliceCount {
       return count(of: bundle.resources(of: FHIR.MedicationRequest.self).map { $0.subject }, hasMore: hasMore)
 
     case .outOfRange:
-      // 時間窗必須在 client 端再守一次：實測 Siming 的 `date` 過濾靜默無效
-      // （參數在白名單裡、strict 模式也不報錯，但完全沒套用）。
-      // 卡片文案宣告了「近 24 小時」，那個宣告就必須為真，不能只靠 server。
+      // 時間窗必須在 client 端再守一次。卡片文案宣告了「近 24 小時」，那個宣告
+      // 就必須為真，不能只靠 server——實測 Siming 曾經接受 `date` 卻完全不套用
+      // （參數在白名單裡、strict 模式也不報錯），後來修好了，但**下一個 server
+      // 不會有同樣的保證**。server 端的過濾對這個 app 是效能，不是正確性。
       let cutoff = Date().addingTimeInterval(-Self.outOfRangeWindowHours * 3600)
       let subjects = bundle.resources(of: FHIR.Observation.self)
         .filter { $0.recorded(onOrAfter: cutoff) }

@@ -189,8 +189,9 @@ struct PatientListViewModelTests {
 
   @Test
   func `不是今天的就診不列入今日就診`() async throws {
-    // server 的 Encounter?date= 過濾不能信（實測 Siming 完全沒有作用），
-    // 所以昨天的就診會跟著回來——client 必須自己濾掉，否則卡片說「今日」卻列出全部。
+    // server 端的 Encounter?date= 答不出「今天來的病人」：開放式 period 會被任何
+    // ge 查詢命中，所以昨天還沒結束的就診會跟著回來——client 必須自己濾掉，
+    // 否則卡片說「今日」卻列出別天的人。
     let viewModel = try makeViewModel(slice: .seenToday)
     let response = try bundle(
       #"{"resourceType":"Encounter","id":"e1","status":"finished","class":{"code":"AMB"},"subject":{"reference":"Patient/p1"},"period":{"start":"\#(TestSupport.iso8601(daysAgo: 1))"}}"#,

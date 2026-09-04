@@ -183,8 +183,9 @@ extension PatientListViewModel.Slice {
       return included
 
     case .seenToday:
-      // 與主畫面的計數用同一個判準：today 由 client 決定，不依賴 server 的
-      // `Encounter?date=`（實測 Siming 完全沒有作用，連純日期都不生效）。
+      // 與主畫面的計數用同一個判準：today 由 client 決定。開放式 period 與
+      // 純日期的時區解讀都會讓 server 端的 `date=` 答出不同的東西，見
+      // `MainViewModel.SliceCount.make(from:slice:)` 的說明。
       let today = Date()
       let references = Set(
         bundle.resources(of: FHIR.Encounter.self)

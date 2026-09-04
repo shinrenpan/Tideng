@@ -50,7 +50,9 @@ swift run SimingSeed                          # 預設 http://localhost:8080
 可重複執行：每個資源帶固定的 identifier，以 `If-None-Exist` 做 conditional create，
 重跑只會回報「已存在」。
 
-產生 20 位中文姓名的病人、3 位醫師、8 筆今日就診、308 筆生命徵象、10 筆用藥。
+產生 20 位中文姓名的病人、4 位醫事人員（2 位醫師 + 2 位護理師，各帶 `PractitionerRole`）、
+8 筆今日就診、308 筆生命徵象、10 筆用藥。處方只由醫師開立——護理師沒有處方權，
+輪流指派 `requester` 時若不看角色，資料在有臨床背景的人面前一眼就假。
 
 生命徵象刻意做成三種形狀，各自要證明一件事：
 
@@ -62,6 +64,13 @@ swift run SimingSeed                          # 預設 http://localhost:8080
   用來證明 app 不會對沒有依據的數值做判斷
 - **1 位初診病人**（潘冠宇）只有最近一次紀錄，每張圖只有一個點——診所本來就有這種
   病人，順帶讓「單一觀測值也要畫得出來」在真實資料上驗得到
+
+就診紀錄 6 筆已結束（帶 `period.end`）、2 筆仍在診間。**不要讓它們全部開放式**：
+沒有 `period.end` 的 period 在 FHIR 裡代表「進行中／結束時間未知」，會被
+`date=ge<任何未來時間>` 命中，而且小診所不會同時有 8 位病人在診間裡。
+
+時間一律錨定在**今天之內**平均分布，不是「`now` 往前 N 小時」——後者在半夜灌資料時
+會整批跨到昨天，隔天 demo 看到「今日就診 0」而完全看不出原因。
 
 ## iPad 要填哪個 URL
 
@@ -92,7 +101,13 @@ http://localhost:8090/v/r4/sim/e30/fhir
 
 實測結果記在 [`../docs/STATUS.md`](../docs/STATUS.md)。動工前值得知道的三項：
 
-- **沒有 `PractitionerRole`** — app 已優雅降級（職位行消失、姓名照顯示）
 - **只支援 `transaction`，沒有 `batch`** — 唯讀期無影響，但牴觸 tech spec 的離線同步設計
-- **`Observation?date=` 宣稱支援但完全無效** — 連 `Prefer: handling=strict` 都不報錯。
-  由此得到的通則：凡是 UI 對使用者宣告了範圍，那個範圍就必須在 client 端守住
+- **`_summary=count` 與一般查詢走不同 SQL** — 同一個 query string，帶不帶 `_summary=count`
+  會得到互相矛盾的答案。24 個 store 有 20 個漂移
+- **`_count` 上限 100、`_sort` 只認五個欄位**（未知欄位靜默丟棄）
+
+`PractitionerRole`、「搜尋回傳已刪除資源」、「`date` 帶時間被忽略」三項已由 Siming 端修復
+（⚠️ 尚未 commit，重新 clone 會回到有缺陷的版本）。
+
+由此得到的通則：**凡是 UI 對使用者宣告了範圍，那個範圍就必須在 client 端守住。**
+server 端的過濾對這個 app 是效能，不是正確性。

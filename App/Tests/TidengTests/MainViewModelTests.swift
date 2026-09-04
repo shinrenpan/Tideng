@@ -310,8 +310,9 @@ struct MainViewModelTests {
 
   @Test
   func `今日就診的計數排除不是今天的就診`() async throws {
-    // 卡片文案宣告了「今日」，那個宣告必須為真。實測 Siming 的 Encounter?date=
-    // 完全沒有作用（連純日期都不生效），所以昨天的就診會跟著回來。
+    // 卡片文案宣告了「今日」，那個宣告必須為真。server 端的 date= 就算正確也
+    // 答不出這件事：開放式 period 會被任何 ge 查詢命中，所以昨天還沒結束的
+    // 就診會跟著回來。
     let viewModel = try makeViewModel()
     let bundle = try TestSupport.bundle("""
     { "resourceType": "Bundle", "type": "searchset",
