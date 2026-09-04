@@ -4,29 +4,55 @@
 Siming 的原始碼在自己的 repo（<https://github.com/shinrenpan/Siming>），不複製進來——
 兩份 source of truth 遲早會漂移。
 
-## 起服務
+## 兩段式啟動
+
+Siming 與 launcher **各自獨立啟動**。不把 Siming 塞進這裡的 compose，是因為那需要寫死
+它的 clone 路徑（`build: ../../Siming`），而那個假設換一台機器就失效。
+
+### 1. 起 Siming
 
 ```bash
-# Docker daemon（本機用 colima）
-colima start
+cd ~/Documents/github/Siming
+docker-compose up -d db                       # Postgres
 
+# demo 用獨立的資料庫，不動既有資料
+docker-compose exec -T db psql -U siming -d postgres -c "CREATE DATABASE siming_demo;"
+DATABASE_URL=postgres://siming:siming@localhost:5432/siming_demo swift run SimingServer
+```
+
+不設 `SMART_ISSUER` 時 Siming 完全不驗證 bearer token——Phase A 的信任邊界在 launcher，
+這是刻意的。
+
+> ⚠️ Siming 的 `scripts/run-macOS.sh` 用的是 `docker compose` 子命令。若你的環境只有獨立的
+> `docker-compose`，照上面的指令手動走即可，不要去改那個 repo 的腳本。
+
+### 2. 起 launcher
+
+```bash
+colima start          # 若尚未執行
 cd Server
 docker-compose up -d
-docker-compose logs -f smart-launcher
 ```
 
 launcher UI：<http://localhost:8090>
 
-## 兩個階段
+它的 `FHIR_SERVER_R4` 指向 `http://host.docker.internal:8080`（容器連回 host 的位址，
+**macOS／Windows 適用，Linux 需另外設定**）。切回公開 server 只需改成
+`https://hapi.fhir.org/baseR4` 再 `docker-compose up -d`。
 
-| | 後端 | Siming 需要就位嗎 | 目的 |
-|---|---|---|---|
-| **Phase A**（現在） | HAPI 公開 R4 server | 不需要 | 先把 SMART 登入流程寫通 |
-| **Phase B** | Siming | 需要 | 換成自己的 server，驗證 client 零修改 |
+### 3. 灌示範資料
 
-切換方式：改 `docker-compose.yml` 的 `FHIR_SERVER_R4`，並把 `siming` / `postgres`
-兩個服務取消註解。**iPad 端只換 base URL，程式碼不動**——這是 tech spec 的核心假設，
-Phase B 就是在驗證它。
+```bash
+cd Server/seed
+swift run SimingSeed                          # 預設 http://localhost:8080
+```
+
+可重複執行：每個資源帶固定的 identifier，以 `If-None-Exist` 做 conditional create，
+重跑只會回報「已存在」。
+
+產生 20 位中文姓名的病人、3 位醫師、8 筆今日就診、160 筆生命徵象、10 筆用藥。
+其中 3 位病人的觀測值刻意落在 server 提供的參考範圍外，另有一批刻意不帶參考範圍——
+後者用來證明 app 不會對沒有依據的數值做判斷。
 
 ## iPad 要填哪個 URL
 
@@ -53,8 +79,11 @@ http://localhost:8090/v/r4/sim/e30/fhir
 
 實機還需要 ATS 例外才能走 HTTP —— 僅限 Debug configuration，Release build 不得包含。
 
-## 已知要先驗的事
+## Siming 的能力缺口
 
-launcher 的 patient / provider picker 會對後端打 `Patient?...`、`Practitioner?...` 搜尋。
-Phase B 切到 Siming 時，**先確認這兩條查詢相容**再寫任何 client 程式碼——
-這是 tech spec §6 的 S6 檢查項。
+實測結果記在 [`../docs/STATUS.md`](../docs/STATUS.md)。動工前值得知道的三項：
+
+- **沒有 `PractitionerRole`** — app 已優雅降級（職位行消失、姓名照顯示）
+- **只支援 `transaction`，沒有 `batch`** — 唯讀期無影響，但牴觸 tech spec 的離線同步設計
+- **`Observation?date=` 宣稱支援但完全無效** — 連 `Prefer: handling=strict` 都不報錯。
+  由此得到的通則：凡是 UI 對使用者宣告了範圍，那個範圍就必須在 client 端守住

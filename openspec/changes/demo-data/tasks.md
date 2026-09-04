@@ -7,7 +7,7 @@
 
 - [x] 2.1 Siming 可在本機啟動並回應健康檢查，launcher 的後端指向它而非公開 server。落實 design 決策「Siming 獨立啟動，launcher 從 host 連過去」。驗證：curl Siming 的 `/metadata` 得到 CapabilityStatement，且經 launcher proxy 查詢 `Patient` 回傳 Bundle
 - [ ] 2.2 伺服器 preset 涵蓋接上 Siming 的位址，且與公開 sandbox 並列可切換。驗證：模擬器上兩個 preset 各登入一次皆成功——滿足 Requirement: The same app connects to a second server unchanged
-- [ ] 2.3 `Server/README.md` 說明兩段式啟動（先起 Siming、再起 launcher）與 `host.docker.internal` 的 macOS 限制。驗證：照文件從零走一次，服務可用
+- [x] 2.3 `Server/README.md` 說明兩段式啟動（先起 Siming、再起 launcher）與 `host.docker.internal` 的 macOS 限制。驗證：照文件從零走一次，服務可用
 
 ## 3. seed 工具
 
@@ -18,12 +18,12 @@
 
 ## 4. 資料內容
 
-- [ ] 4.1 產生 20 位病人，具中文姓名、台灣病歷號格式的 identifier、分佈合理的出生日期。滿足 Requirement: Demo data reads as a real Taiwanese clinic。驗證：查詢 `Patient` 後人工檢視清單，確認無佔位字串、無 0 歲、每位皆有病歷號
-- [ ] 4.2 每位病人具備跨越至少 48 小時的 vital-signs 時序，使用 `FHIRCore` 既有的 LOINC 常數與 `vital-signs` category。滿足 Requirement: Vital signs form a trend, not isolated points。驗證：查詢單一病人的生命徵象，確認回傳多個時間點且 app 既有查詢無需特例即可取得
-- [ ] 4.3 近 24 小時內的觀測值總數低於 100，避免被 `_count` 上限截斷；約 8 位病人有近 24 小時資料，其餘落在 24–48 小時前。驗證：`Observation?category=vital-signs&date=ge<24h前>&_summary=count` 的 total 小於 100
-- [ ] 4.4 部分觀測值帶 `referenceRange` 且數值落在範圍外，另有落在範圍內者，以及刻意不帶 `referenceRange` 者。滿足 Requirement: Some observations carry a reference range and fall outside it。驗證：app 連上後「超出參考值」卡片顯示正整數；且不帶範圍的高數值病人未被計入
+- [x] 4.1 產生 20 位病人，具中文姓名、台灣病歷號格式的 identifier、分佈合理的出生日期。滿足 Requirement: Demo data reads as a real Taiwanese clinic。驗證：查詢 `Patient` 後人工檢視清單，確認無佔位字串、無 0 歲、每位皆有病歷號
+- [x] 4.2 每位病人具備跨越至少 48 小時的 vital-signs 時序，使用 `FHIRCore` 既有的 LOINC 常數與 `vital-signs` category。滿足 Requirement: Vital signs form a trend, not isolated points。驗證：查詢單一病人的生命徵象，確認回傳多個時間點且 app 既有查詢無需特例即可取得
+- [x] 4.3 近 24 小時內的觀測值總數低於 100，避免被 `_count` 上限截斷；約 8 位病人有近 24 小時資料，其餘落在 24–48 小時前。驗證：`Observation?category=vital-signs&date=ge<24h前>&_summary=count` 的 total 小於 100
+- [x] 4.4 部分觀測值帶 `referenceRange` 且數值落在範圍外，另有落在範圍內者，以及刻意不帶 `referenceRange` 者。滿足 Requirement: Some observations carry a reference range and fall outside it。驗證：app 連上後「超出參考值」卡片顯示正整數；且不帶範圍的高數值病人未被計入
 
 ## 5. 端到端驗證
 
-- [ ] 5.1 app 連上 Siming 後四張卡片皆有數字、「超出參考值」為正整數、病人清單顯示中文姓名與年齡。驗證：模擬器截圖，並與先前連公開 server 的截圖對照
-- [ ] 5.2 缺少 `PractitionerRole` 時側邊欄仍顯示姓名、僅省略職位行。滿足 Requirement: Capabilities the second server lacks degrade rather than break。驗證：模擬器截圖確認 header 顯示姓名而非 raw reference
+- [x] 5.1 app 連上 Siming 後四張卡片皆有數字、「超出參考值」為正整數、病人清單顯示中文姓名與年齡。驗證：模擬器截圖，並與先前連公開 server 的截圖對照
+- [x] 5.2 缺少 `PractitionerRole` 時側邊欄仍顯示姓名、僅省略職位行。滿足 Requirement: Capabilities the second server lacks degrade rather than break。驗證：模擬器截圖確認 header 顯示姓名而非 raw reference
