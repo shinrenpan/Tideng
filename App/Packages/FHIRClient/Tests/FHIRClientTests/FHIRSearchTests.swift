@@ -38,8 +38,11 @@ struct FHIRSearchTests {
 
         #expect(search.resourceType == "Encounter")
         let parameters = query(search)
-        // 2026-09-03 12:00 UTC 在台北是 20:00 同日
-        #expect(parameters["date"] == "ge2026-09-03")
+        // 2026-09-03 12:00 UTC 在台北是 20:00 同日 → 當地日界是 09-03 00:00+08:00
+        //
+        // 送的是帶偏移的時刻而不是純日期「2026-09-03」：沒帶時區的日期，
+        // 解讀權就落在 server 手上（實測 Siming 當成 UTC，在 +08 差 8 小時）。
+        #expect(parameters["date"] == "ge2026-09-03T00:00:00+08:00")
         #expect(parameters["_include"] == "Encounter:subject")
     }
 
@@ -49,7 +52,7 @@ struct FHIRSearchTests {
         let lateEvening = Date(timeIntervalSince1970: 1_788_454_800)
         let search = FHIRSearch.encountersToday(now: lateEvening, calendar: taipei)
 
-        #expect(query(search)["date"] == "ge2026-09-04")
+        #expect(query(search)["date"] == "ge2026-09-04T00:00:00+08:00")
     }
 
     @Test("進行中的用藥請求")

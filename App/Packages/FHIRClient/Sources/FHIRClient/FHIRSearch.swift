@@ -94,7 +94,7 @@ public extension FHIRSearch {
         FHIRSearch(
             resourceType: "Encounter",
             parameters: [
-                .init("date", "ge\(Self.localDate(now, calendar: calendar))"),
+                .init("date", "ge\(Self.startOfLocalDay(now, calendar: calendar))"),
                 .init("_include", "Encounter:subject"),
                 .init("_count", String(count))
             ]
@@ -145,10 +145,19 @@ public extension FHIRSearch {
 
     // MARK: - 日期格式
 
-    /// FHIR `date` 精度（YYYY-MM-DD），以指定曆法的時區解讀。
-    private static func localDate(_ date: Date, calendar: Calendar) -> String {
-        let components = calendar.dateComponents([.year, .month, .day], from: date)
-        return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
+    /// 當地日界，**帶明確的時區偏移**（例如 `2026-09-05T00:00:00+08:00`）。
+    ///
+    /// 不送純日期（`2026-09-05`）是刻意的。FHIR R4 §3.1.1 說沒帶時區時應假設
+    /// server 的時區，但實測 Siming 把它當成 UTC——在 +08 的機器上「今天」
+    /// 因此差了 8 小時，當天上午的就診全部落在查詢範圍外。
+    ///
+    /// 這不是為了配合某一個 server：**「今天」本來就是一個帶時區的概念**，
+    /// 送出去卻不講是哪個時區，就是把解讀權交給對方。帶上偏移在任何解讀下都一樣。
+    private static func startOfLocalDay(_ date: Date, calendar: Calendar) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = calendar.timeZone
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.string(from: calendar.startOfDay(for: date))
     }
 
     /// FHIR `instant` 精度，一律 UTC。

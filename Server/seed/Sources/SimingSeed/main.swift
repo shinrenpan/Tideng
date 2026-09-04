@@ -127,11 +127,21 @@ for spec in SeedData.patients {
 
 var encounterTally = SeedTally()
 
-for seq in SeedData.recentPatientSequences.sorted() {
+let startOfToday = Calendar.current.startOfDay(for: now)
+let encounterSequences = SeedData.recentPatientSequences.sorted()
+
+for (order, seq) in encounterSequences.enumerated() {
     guard let patientID = patientIDs[seq] else { continue }
     let practitionerID = practitionerIDs[seq % practitionerIDs.count]
-    // 今天稍早開始，分散在不同時段
-    let start = now.addingTimeInterval(-Double(seq % 6 + 1) * hour)
+    // 平均分布在「今天已經過去的時段」裡。
+    //
+    // 原本是 now 往前 1–6 小時，那會跨午夜：半夜灌資料時就診全部落到昨天，
+    // 隔天 demo 看到「今日就診 0」而完全不知道為什麼。改成錨定在今天之內，
+    // 灌資料的時刻再早也不會跨日；代價只是清晨灌的話就診會擠在一起，
+    // 而那個時段本來就沒人在 demo。
+    let elapsed = now.timeIntervalSince(startOfToday)
+    let slot = elapsed / Double(encounterSequences.count + 1)
+    let start = startOfToday.addingTimeInterval(slot * Double(order + 1))
     // 最後兩位病人還在診間，其餘看完離開了。小診所不會同時有 8 位病人在裡面，
     // 而且開放式 period 在 FHIR 裡代表「還沒結束」，會被時間查詢一直命中。
     let stillHere = SeedData.inProgressPatientSequences.contains(seq)
@@ -140,7 +150,8 @@ for seq in SeedData.recentPatientSequences.sorted() {
         practitionerID: practitionerID,
         seq: seq,
         start: start,
-        end: stillHere ? nil : start.addingTimeInterval(SeedData.consultationMinutes * 60)
+        // 看診結束不能晚於現在——清晨灌資料時 20 分鐘會超過當下
+        end: stillHere ? nil : min(start.addingTimeInterval(SeedData.consultationMinutes * 60), now)
     )
     let outcome = try await client.post(
         resource,
