@@ -46,6 +46,7 @@ demo 階段只能靠 Siming 或公開 sandbox。
 | 病人清單（真實資料、切片、搜尋、四態、下拉刷新） | `Sources/Pages/PatientList` |
 | 主畫面兩層導航：身分 header、大分類、病人切片 grid 與計數 | `Sources/Pages/Main` |
 | 本機 SMART launcher | `Server/docker-compose.yml` |
+| Siming 接上（Phase B）+ 台灣示範資料 seed | `Server/seed/`（Swift executable） |
 
 Spectra 的第一個 change `main-navigation` 已完成並歸檔，產出兩個正式 capability
 （`clinical-dashboard`、`patient-list`，共 13 條 requirement、40 個 scenario）。
@@ -109,10 +110,7 @@ Spectra 的第一個 change `main-navigation` 已完成並歸檔，產出兩個�
 
 ## 3. 還沒做的
 
-- Siming 接上（Phase B）+ 台灣 seed 資料 ← **下一步**。現在「超出參考值」永遠顯示 `—`，
-  因為 HAPI 的 Observation 幾乎不帶 `referenceRange`；而 `<PID.5.2>DANA</PID.5.2>` 那種
-  髒資料拿給診所看會扣分
-- 病人詳情 + 生命徵象趨勢圖（需要 seed 的時序資料才看得出效果）
+- 病人詳情 + 生命徵象趨勢圖 ← **下一步**。seed 已備妥每位病人 48 小時的時序資料
 - 版面粗糙處：搜尋框飄在右上角、清單列太寬
 - TW Core 驗證
 - 寫入路徑、離線佇列、給藥核對、AuditEvent、session 安全（背景遮罩 / 閒置鎖定）
@@ -176,7 +174,7 @@ launcher base URL 的 `sim` 段）記在 [`../App/CLAUDE.md`](../App/CLAUDE.md)�
 
 ## 6. 下一步
 
-1. **Siming 接上 + 台灣 seed 資料**——順序刻意排在趨勢圖之前：趨勢圖要有 48 小時的時序
-   資料才看得出效果，而那要靠 seed；反過來做的話，圖會畫在一堆 `????? ???????` 上
-2. 病人詳情 + 生命徵象趨勢圖（Swift Charts）——dashboard 真正的賣點
-3. 修版面粗糙處
+1. **病人詳情 + 生命徵象趨勢圖**（Swift Charts）——dashboard 真正的賣點。前置條件已備妥：
+   seed 有每位病人 48 小時的時序資料
+2. 修版面粗糙處（搜尋框位置、清單列寬度）
+3. TW Core profile 驗證（需啟用 HL7 Validator sidecar）
