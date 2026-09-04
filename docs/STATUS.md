@@ -86,8 +86,8 @@ Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-deta
 接上 Siming 後逐項實測的結果。記在這裡而不是默默繞過——其中一項會擋住 tech spec 的核心設計。
 
 **2026-09-05 更新**：其中三項已由 Siming 端修復（`PractitionerRole`、刪除後仍被搜到、
-`date` 帶時間被忽略）。⚠️ **修復目前只存在於 Siming 的工作目錄，尚未 commit**——
-重新 clone 或 checkout 會回到有缺陷的版本。
+`date` 帶時間被忽略）。⚠️ 修復在 Siming 的 `fix/search-correctness` 分支上（5 個 commit），
+**尚未合併進 main，也還沒推遠端**——從 main 重新 clone 會回到有缺陷的版本。
 
 | 項目 | 影響 | 現況 |
 |---|---|---|
