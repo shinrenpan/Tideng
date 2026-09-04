@@ -11,10 +11,38 @@ final class PatientListViewModel {
   @ObservationIgnored
   private let client: FHIRClient
 
+  /// 已開啟過的病人詳情，依 id 快取。
+  ///
+  /// 病人數量不定，無法像主畫面那樣由 HostController 預先建好全部；而每次 body 重算
+  /// 就新建一個的話，捲動位置與已載入的觀測值都會丟失。
+  /// 這不是業務邏輯，是子 feature 的組裝——所以不走 `doAction`。
+  @ObservationIgnored
+  private var detailViewModels: [String: PatientDetailViewModel] = [:]
+
   /// - Parameter sliceIdentifier: 主畫面傳來的切片識別碼（primitive，不是 Domain Model）。
   init(client: FHIRClient, sliceIdentifier: String = PatientListViewModel.Slice.all.rawValue) {
     self.client = client
     self.state.slice = .init(identifier: sliceIdentifier)
+  }
+
+  /// 取得（必要時建立）該病人詳情的 ViewModel。
+  func detailViewModel(for patient: Patient) -> PatientDetailViewModel {
+    if let existing = detailViewModels[patient.id] {
+      return existing
+    }
+    let viewModel = PatientDetailViewModel(
+      client: client,
+      // 跨 feature 邊界只傳 primitive——詳情頁不認識這裡的 Patient 型別
+      patient: .init(
+        id: patient.id,
+        name: patient.name,
+        gender: nil,
+        age: patient.age,
+        recordNumber: patient.recordNumber
+      )
+    )
+    detailViewModels[patient.id] = viewModel
+    return viewModel
   }
 
   func doAction(_ action: Action) async {
@@ -43,6 +71,7 @@ extension PatientListViewModel {
     case isFirstAppear
     case pullToRefresh
     case retryDidTap
+    case patientDidTap(Patient)
   }
 
   enum APIRequest: Sendable {
@@ -69,6 +98,9 @@ private extension PatientListViewModel {
 
     case .pullToRefresh, .retryDidTap:
       await doAction(.apiRequest(.loadPatients))
+
+    case let .patientDidTap(patient):
+      state.presentedPatient = patient
     }
   }
 }

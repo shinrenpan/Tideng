@@ -41,6 +41,16 @@
         }
       }
     },
+    "Can't load vital signs": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "讀不到生命徵象"
+          }
+        }
+      }
+    },
     "Can't reach the server. Check the address and your connection.": {
       "localizations": {
         "zh-Hant": {
@@ -131,6 +141,16 @@
         }
       }
     },
+    "Diastolic Blood Pressure": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "舒張壓"
+          }
+        }
+      }
+    },
     "FHIR server address": {
       "localizations": {
         "zh-Hant": {
@@ -147,6 +167,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "女"
+          }
+        }
+      }
+    },
+    "Heart Rate": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "心跳速率"
           }
         }
       }
@@ -211,6 +241,16 @@
         }
       }
     },
+    "No vital signs recorded": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有生命徵象紀錄"
+          }
+        }
+      }
+    },
     "Not recorded": {
       "localizations": {
         "zh-Hant": {
@@ -251,6 +291,16 @@
         }
       }
     },
+    "Oxygen Saturation": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "血氧飽和度"
+          }
+        }
+      }
+    },
     "Patients": {
       "localizations": {
         "zh-Hant": {
@@ -267,6 +317,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "快速填入"
+          }
+        }
+      }
+    },
+    "Reference high": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "參考範圍上限"
+          }
+        }
+      }
+    },
+    "Reference low": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "參考範圍下限"
+          }
+        }
+      }
+    },
+    "Respiratory Rate": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "呼吸速率"
           }
         }
       }
@@ -331,6 +411,26 @@
         }
       }
     },
+    "Systolic Blood Pressure": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收縮壓"
+          }
+        }
+      }
+    },
+    "Temperature": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "體溫"
+          }
+        }
+      }
+    },
     "That doesn't look like a valid server address.": {
       "localizations": {
         "zh-Hant": {
@@ -376,7 +476,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "伺服器回應異常。"
+            "value": "伺服器回應不符預期。"
           }
         }
       }
@@ -421,6 +521,16 @@
         }
       }
     },
+    "Time": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "時間"
+          }
+        }
+      }
+    },
     "Try Again": {
       "localizations": {
         "zh-Hant": {
@@ -437,6 +547,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "未命名"
+          }
+        }
+      }
+    },
+    "Value": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "數值"
           }
         }
       }

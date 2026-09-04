@@ -10,6 +10,11 @@ extension PatientListViewModel {
     var isFirstAppear: Bool = true
     var slice: Slice = .all
     var patients: [Patient] = []
+    /// 目前推進到哪位病人的詳情。`nil` 表示停在清單。
+    ///
+    /// 與主畫面的 `presentedSlice` 同一套理由：這是內容區 NavigationStack 內的推進，
+    /// 不需要取得 presenting VC，屬 V 層做得到的事。
+    var presentedPatient: Patient?
     var keyword: String = ""
     var api: API = .init()
 
@@ -55,7 +60,9 @@ extension PatientListViewModel {
     }
   }
 
-  struct Patient: Identifiable, Equatable, Sendable {
+  /// `Hashable` 是 SwiftUI 導航的要求（`navigationDestination(item:)` 需要它來
+  /// 判斷推進目標是否改變），不是 Domain Model 本身的需要。
+  struct Patient: Identifiable, Equatable, Hashable, Sendable {
     let id: String
     var name: String
     var gender: PatientGender

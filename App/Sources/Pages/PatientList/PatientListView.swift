@@ -46,6 +46,9 @@ struct PatientListView: View {
     @Bindable var bVM = viewModel
 
     content()
+      .navigationDestination(item: $bVM.state.presentedPatient) { patient in
+        PatientDetailView(viewModel: viewModel.detailViewModel(for: patient))
+      }
       .navigationTitle(viewModel.state.slice.title)
       .searchable(text: $bVM.state.keyword, prompt: "Name or record number")
       .refreshable { await viewModel.doAction(.view(.pullToRefresh)) }
@@ -53,6 +56,13 @@ struct PatientListView: View {
   }
 
   // 先看有沒有內容、再看狀態：刷新失敗時不能把使用者眼前的清單換成錯誤畫面。
+  @MainActor private func handleListAction(_ action: ListSection.Action) {
+    switch action {
+    case let .patientDidTap(patient):
+      Task { await viewModel.doAction(.view(.patientDidTap(patient))) }
+    }
+  }
+
   @ViewBuilder private func content() -> some View {
     if viewModel.state.patients.isEmpty {
       switch viewModel.state.api.loadPatients {
@@ -74,7 +84,7 @@ struct PatientListView: View {
         ContentUnavailableView("No patients on this server", systemImage: "tray")
       }
     } else {
-      ListSection(patients: viewModel.state.filteredPatients)
+      ListSection(patients: viewModel.state.filteredPatients, send: handleListAction)
     }
   }
 }
@@ -85,11 +95,21 @@ private extension PatientListView {
 
   struct ListSection: View {
 
+    enum Action: Sendable {
+      case patientDidTap(PatientListViewModel.Patient)
+    }
+
     let patients: [PatientListViewModel.Patient]
+    let send: @MainActor (Action) -> Void
 
     var body: some View {
       List(patients) { patient in
-        ListRow(patient: patient)
+        Button {
+          send(.patientDidTap(patient))
+        } label: {
+          ListRow(patient: patient)
+        }
+        .buttonStyle(.plain)
       }
       .listStyle(.plain)
       .overlay {
@@ -129,8 +149,16 @@ private extension PatientListView {
           .font(.footnote)
           .foregroundStyle(.secondary)
         }
+
+        Spacer(minLength: 0)
+
+        // 讓「可以點」這件事看得出來，而不是靠使用者試出來
+        Image(systemName: "chevron.right")
+          .font(.footnote.weight(.semibold))
+          .foregroundStyle(.tertiary)
       }
       .padding(.vertical, 4)
+      .contentShape(.rect)
     }
   }
 }
