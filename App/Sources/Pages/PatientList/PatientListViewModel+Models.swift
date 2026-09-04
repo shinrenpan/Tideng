@@ -168,8 +168,11 @@ extension PatientListViewModel.Slice {
       return included
 
     case .outOfRange:
+      // 與主畫面的計數用同一個時間窗——server 的 date 過濾不能信（實測 Siming 靜默無效）。
+      let cutoff = Date().addingTimeInterval(-MainViewModel.SliceCount.outOfRangeWindowHours * 3600)
       let references = Set(
         bundle.resources(of: FHIR.Observation.self)
+          .filter { $0.recorded(onOrAfter: cutoff) }
           .filter { $0.referenceRangeStatus == .outside }
           .compactMap { $0.subject?.reference?.value?.string }
       )

@@ -122,10 +122,14 @@ public extension FHIRSearch {
     /// FHIR 沒有針對 referenceRange 的 search parameter，所以「超出參考值」只能把資料撈回來
     /// 在 client 端比對。時間窗與 `_count` 是那個做法的必要邊界——沒有它們，資料量大的
     /// server 會讓這個查詢無止境地長大。
+    ///
+    /// 上限 100 是對齊 Siming 的實際能力：它的 route 檔硬寫 `maxCount = 100`，
+    /// 送更大的值會被**靜默截斷**——查詢不報錯，只是資料少一截、計數安靜地低估。
+    /// （`config.yml` 裡宣稱的 `maxCount: 1000` 是死設定，`SimingConfig` 沒有這個欄位。）
     static func recentVitalSigns(
         now: Date = .now,
         hours: Int = 24,
-        count: Int = 500
+        count: Int = 100
     ) -> FHIRSearch {
         let since = now.addingTimeInterval(-Double(hours) * 3600)
         return FHIRSearch(

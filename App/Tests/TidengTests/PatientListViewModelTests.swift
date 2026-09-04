@@ -191,8 +191,8 @@ struct PatientListViewModelTests {
   func `超出參考值只收落在範圍外那些觀測值的病人`() async throws {
     let viewModel = try makeViewModel(slice: .outOfRange)
     let response = try bundle(
-      #"{"resourceType":"Observation","id":"o1","status":"final","code":{"coding":[{"code":"8310-5"}]},"subject":{"reference":"Patient/p1"},"valueQuantity":{"value":38.9},"referenceRange":[{"low":{"value":36.0},"high":{"value":37.5}}]}"#,
-      #"{"resourceType":"Observation","id":"o2","status":"final","code":{"coding":[{"code":"8310-5"}]},"subject":{"reference":"Patient/p2"},"valueQuantity":{"value":37.0},"referenceRange":[{"low":{"value":36.0},"high":{"value":37.5}}]}"#,
+      #"{"resourceType":"Observation","id":"o1","status":"final","code":{"coding":[{"code":"8310-5"}]},"subject":{"reference":"Patient/p1"},"effectiveDateTime":"\#(TestSupport.iso8601(hoursAgo: 2))","valueQuantity":{"value":38.9},"referenceRange":[{"low":{"value":36.0},"high":{"value":37.5}}]}"#,
+      #"{"resourceType":"Observation","id":"o2","status":"final","code":{"coding":[{"code":"8310-5"}]},"subject":{"reference":"Patient/p2"},"effectiveDateTime":"\#(TestSupport.iso8601(hoursAgo: 2))","valueQuantity":{"value":37.0},"referenceRange":[{"low":{"value":36.0},"high":{"value":37.5}}]}"#,
       #"{"resourceType":"Patient","id":"p1","name":[{"family":"王","given":["小明"]}]}"#,
       #"{"resourceType":"Patient","id":"p2","name":[{"family":"陳","given":["美玲"]}]}"#
     )
@@ -208,7 +208,7 @@ struct PatientListViewModelTests {
   func `沒有參考範圍的觀測值不會讓病人進入超出參考值清單`() async throws {
     let viewModel = try makeViewModel(slice: .outOfRange)
     let response = try bundle(
-      #"{"resourceType":"Observation","id":"o1","status":"final","code":{"coding":[{"code":"8310-5"}]},"subject":{"reference":"Patient/p1"},"valueQuantity":{"value":41.0}}"#,
+      #"{"resourceType":"Observation","id":"o1","status":"final","code":{"coding":[{"code":"8310-5"}]},"subject":{"reference":"Patient/p1"},"effectiveDateTime":"\#(TestSupport.iso8601(hoursAgo: 2))","valueQuantity":{"value":41.0}}"#,
       #"{"resourceType":"Patient","id":"p1"}"#
     )
 

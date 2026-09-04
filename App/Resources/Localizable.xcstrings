@@ -171,6 +171,16 @@
         }
       }
     },
+    "Local Siming with demo data, via the SMART launcher": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本機 Siming（含示範資料），經 SMART launcher"
+          }
+        }
+      }
+    },
     "Male": {
       "localizations": {
         "zh-Hant": {
@@ -377,16 +387,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "伺服器的回應無法解讀為 FHIR 格式。"
-          }
-        }
-      }
-    },
-    "The service started by Server/docker-compose.yml": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server/docker-compose.yml 起的服務"
           }
         }
       }

@@ -76,6 +76,37 @@ Spectra 的第一個 change `main-navigation` 已完成並歸檔，產出兩個�
 對一個主打「連得上任何 FHIR server」的 app，這不是邊緣案例而是常態。現在改為逐筆容錯解碼，
 並把跳過的筆數反映在計數的精確性上（降級為下限值）。這件事在接真實醫院資料時只會更嚴重。
 
+## 2.5 Siming 的能力缺口（實測，2026-09-04）
+
+接上 Siming 後實際確認的三項落差。記在這裡而不是默默繞過——其中一項會擋住 tech spec 的核心設計。
+
+| 缺口 | 影響 | 後續 |
+|---|---|---|
+| **不支援 `PractitionerRole`** | 側邊欄取不到職位 | app 已優雅降級（職位行消失、姓名照顯示）。不需要 server 補 |
+| **只支援 `transaction`，沒有 `batch`** | **牴觸 `NIS-TECH-SPEC.md` §0 第二個關鍵判斷** | 唯讀期無影響；離線同步動工前必須解決，見下 |
+| **`_count` 上限實際是 100** | 送更大的值會被靜默截斷，查詢不報錯但資料少一截 | app 端已對齊為 100 |
+| **`_sort` 只認五個欄位**（`_lastUpdated` / `_id` / `name` / `family` / `birthdate`） | 未知欄位**靜默丟棄**，排序失效時看不出來 | 目前只用到 `family`，可用 |
+| **`Observation?date=` 宣稱支援但完全沒有作用** | 時間窗失效，「近 24 小時」變成「全部」 | app 端已改為自己過濾時間 |
+
+⚠️ **`date` 那一項是這批裡最危險的。** 它不是「不支援」——`date` 就在 `knownObservationParams`
+白名單裡，連 `Prefer: handling=strict` 都不會報錯，但過濾**完全沒有套用**：查未來時間照樣回傳
+全部資料。一個宣稱支援、靜默無效、且連嚴格模式都抓不出來的參數，比明確不支援危險得多。
+
+由此得到一條通則：**凡是 UI 對使用者宣告了範圍（「近 24 小時」），那個範圍就必須在 client 端
+守住，不能只靠 server 的查詢參數。** app 已照此調整——`Observation.recordedAt` 與
+`recorded(onOrAfter:)` 在計數與清單兩處都再過濾一次。
+
+⚠️ **batch 那一項是真正的阻斷點。** tech spec §0 主張同步 flush 用 `batch` 而非 `transaction`，
+理由是 transaction 全有全無——佇列裡一筆壞資料會 rollback 整批，好資料被連坐、佇列卡死。
+而 Siming 目前只接受 `Bundle.type == transaction`（`TransactionRoutes.swift` 第 68 行的 guard）。
+
+也就是說：**離線同步的核心設計在自家 server 上還跑不起來。** 兩條路——Siming 補 batch，
+或改用逐筆 POST 帶 `If-None-Exist`（會犧牲一次往返送多筆的效率，但保住壞資料隔離）。
+這個決定要在離線同步動工前做，不是動工時才發現。
+
+另外兩項不是缺口但值得知道：`_count` 的預設值是 20；`_summary=true` 會把 `referenceRange`
+砍掉（符合 FHIR 規範，因為它不是 Σ-marked element），所以 client 不能為了省流量帶 `_summary`。
+
 ## 3. 還沒做的
 
 - Siming 接上（Phase B）+ 台灣 seed 資料 ← **下一步**。現在「超出參考值」永遠顯示 `—`，

@@ -135,6 +135,9 @@ extension MainViewModel.PractitionerIdentity {
 
 extension MainViewModel.SliceCount {
 
+  /// 「超出參考值」的時間窗，必須與查詢送出的值一致。
+  static let outOfRangeWindowHours: Double = 24
+
   /// 從 bundle 算出切片的**病人數**。
   ///
   /// 三個切片都必須依 subject 去重——一位病人可能有多次就診、多筆用藥、多筆觀測值，
@@ -161,8 +164,13 @@ extension MainViewModel.SliceCount {
       return count(of: bundle.resources(of: FHIR.MedicationRequest.self).map { $0.subject }, hasMore: hasMore)
 
     case .outOfRange:
-      // 只計入 server 有給參考範圍、且數值落在範圍外的。沒給範圍不判讀。
+      // 時間窗必須在 client 端再守一次：實測 Siming 的 `date` 過濾靜默無效
+      // （參數在白名單裡、strict 模式也不報錯，但完全沒套用）。
+      // 卡片文案宣告了「近 24 小時」，那個宣告就必須為真，不能只靠 server。
+      let cutoff = Date().addingTimeInterval(-Self.outOfRangeWindowHours * 3600)
       let subjects = bundle.resources(of: FHIR.Observation.self)
+        .filter { $0.recorded(onOrAfter: cutoff) }
+        // 只計入 server 有給參考範圍、且數值落在範圍外的。沒給範圍不判讀。
         .filter { $0.referenceRangeStatus == .outside }
         .map(\.subject)
       return count(of: subjects, hasMore: hasMore)

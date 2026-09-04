@@ -293,16 +293,19 @@ struct MainViewModelTests {
         { "resource": { "resourceType": "Observation", "id": "o1", "status": "final",
             "code": { "coding": [{ "code": "8310-5" }] },
             "subject": { "reference": "Patient/p1" },
+            "effectiveDateTime": "\(TestSupport.iso8601(hoursAgo: 2))",
             "valueQuantity": { "value": 38.9 },
             "referenceRange": [{ "low": { "value": 36.0 }, "high": { "value": 37.5 } }] } },
         { "resource": { "resourceType": "Observation", "id": "o2", "status": "final",
             "code": { "coding": [{ "code": "8310-5" }] },
             "subject": { "reference": "Patient/p2" },
+            "effectiveDateTime": "\(TestSupport.iso8601(hoursAgo: 2))",
             "valueQuantity": { "value": 37.0 },
             "referenceRange": [{ "low": { "value": 36.0 }, "high": { "value": 37.5 } }] } },
         { "resource": { "resourceType": "Observation", "id": "o3", "status": "final",
             "code": { "coding": [{ "code": "8310-5" }] },
             "subject": { "reference": "Patient/p3" },
+            "effectiveDateTime": "\(TestSupport.iso8601(hoursAgo: 2))",
             "valueQuantity": { "value": 41.0 } } }
       ] }
     """)
@@ -322,6 +325,7 @@ struct MainViewModelTests {
         { "resource": { "resourceType": "Observation", "id": "o1", "status": "final",
             "code": { "coding": [{ "code": "8310-5" }] },
             "subject": { "reference": "Patient/p1" },
+            "effectiveDateTime": "\(TestSupport.iso8601(hoursAgo: 2))",
             "valueQuantity": { "value": 41.0 } } }
       ] }
     """)
@@ -454,5 +458,68 @@ struct PractitionerIdentityResilienceTests {
 
     #expect(identity.name == nil)
     #expect(identity.displayName == "Practitioner/137594487")
+  }
+}
+
+// MARK: - 時間窗必須由 client 自己守住
+
+@MainActor
+struct OutOfRangeTimeWindowTests {
+
+  private func makeViewModel() throws -> MainViewModel {
+    MainViewModel(
+      client: try TestSupport.makeClient(),
+      tokenStore: try TestSupport.makeTokenStore(),
+      serverHost: "example.org"
+    )
+  }
+
+  private func observation(patient: String, hoursAgo: Double) -> String {
+    """
+    { "resource": { "resourceType": "Observation", "id": "o-\(patient)", "status": "final",
+        "code": { "coding": [{ "code": "8310-5" }] },
+        "subject": { "reference": "Patient/\(patient)" },
+        "effectiveDateTime": "\(TestSupport.iso8601(hoursAgo: hoursAgo))",
+        "valueQuantity": { "value": 38.9 },
+        "referenceRange": [{ "low": { "value": 36.0 }, "high": { "value": 37.5 } }] } }
+    """
+  }
+
+  @Test
+  func `時間窗外的觀測值不計入即使超出參考範圍`() async throws {
+    // server 可能無視 date 參數（實測 Siming 就是如此：參數在白名單裡、
+    // strict 模式不報錯，但過濾完全沒套用）。卡片宣告了「近 24 小時」，
+    // 那個宣告必須由 client 自己守住。
+    let viewModel = try makeViewModel()
+    let bundle = try TestSupport.bundle("""
+    { "resourceType": "Bundle", "type": "searchset", "entry": [
+      \(observation(patient: "p1", hoursAgo: 2)),
+      \(observation(patient: "p2", hoursAgo: 100))
+    ] }
+    """)
+
+    await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .success(TestSupport.response(bundle)))))
+
+    // p2 的體溫同樣超出範圍，但那是 100 小時前的事
+    #expect(viewModel.state.slices[.outOfRange]?.count == .exact(1))
+  }
+
+  @Test
+  func `沒有時間資訊的觀測值不計入`() async throws {
+    let viewModel = try makeViewModel()
+    let bundle = try TestSupport.bundle("""
+    { "resourceType": "Bundle", "type": "searchset", "entry": [
+      { "resource": { "resourceType": "Observation", "id": "o1", "status": "final",
+          "code": { "coding": [{ "code": "8310-5" }] },
+          "subject": { "reference": "Patient/p1" },
+          "valueQuantity": { "value": 38.9 },
+          "referenceRange": [{ "low": { "value": 36.0 }, "high": { "value": 37.5 } }] } }
+    ] }
+    """)
+
+    await viewModel.doAction(.apiResponse(.sliceCount(.outOfRange, .success(TestSupport.response(bundle)))))
+
+    // 寧可少算，也不要把不知道時間的資料算進一個宣稱了時間範圍的數字
+    #expect(viewModel.state.slices[.outOfRange]?.count == .exact(0))
   }
 }

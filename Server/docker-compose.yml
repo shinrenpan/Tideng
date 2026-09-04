@@ -1,9 +1,12 @@
 # Tideng 本地開發環境
 #
-# Phase A（現在）：smart-launcher-v2 擋在前面模擬 SMART authorize/token/discovery，
-#                  後端先接公開的 HAPI R4 server —— 不必等 Siming 就位就能開發登入流程。
-# Phase B（之後）：把 FHIR_SERVER_R4 換成 http://siming:8080，並把 siming / postgres
-#                  兩個服務取消註解。iPad 端只換 base URL，client 程式碼零修改。
+# Phase B（現在）：smart-launcher-v2 擋在前面模擬 SMART authorize/token/discovery，
+#                  後端接本機的 Siming。
+#
+# Siming 不放進這個 compose：那會需要寫死它的 clone 路徑（build: ../../Siming），
+# 而那個假設換一台機器就失效。改為各自獨立啟動，見 README。
+#
+# 切回公開 server 只需把 FHIR_SERVER_R4 改成 https://hapi.fhir.org/baseR4 再重啟。
 
 services:
   smart-launcher:
@@ -16,7 +19,8 @@ services:
       PORT: 80
       # 開發用，不是機密。正式部署必須換掉。
       SECRET: tideng-local-dev-secret
-      FHIR_SERVER_R4: "https://hapi.fhir.org/baseR4"
+      # host.docker.internal 是容器連回 host 的位址（macOS／Windows 適用，Linux 需另外設定）
+      FHIR_SERVER_R4: "http://host.docker.internal:8080"
       # 只留 R4，關掉其他版本避免 launcher UI 出現用不到的選項。
       FHIR_SERVER_R2: ""
       FHIR_SERVER_R3: ""

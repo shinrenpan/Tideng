@@ -100,3 +100,16 @@ extension TestSupport {
     .init(bundle: bundle, skippedEntries: skipped, decodedEntries: bundle.entry?.count ?? 0)
   }
 }
+
+extension TestSupport {
+
+  /// 相對於現在的 ISO8601 時間字串。
+  ///
+  /// 用相對時間而非寫死的值：「超出參考值」有 24 小時的時間窗，寫死的日期會隨著
+  /// 時間流逝掉出窗外，讓測試在某天突然開始失敗。
+  static func iso8601(hoursAgo: Double) -> String {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime]
+    return formatter.string(from: Date().addingTimeInterval(-hoursAgo * 3600))
+  }
+}

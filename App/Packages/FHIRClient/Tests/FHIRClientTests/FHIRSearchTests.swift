@@ -73,8 +73,9 @@ struct FHIRSearchTests {
         // 24 小時前：2026-09-02T12:00:00Z
         #expect(parameters["date"] == "ge2026-09-02T12:00:00Z")
         #expect(parameters["_include"] == "Observation:subject")
-        // design 定的取樣上限——沒有它，資料量大的 server 會拖垮這個切片
-        #expect(parameters["_count"] == "500")
+        // 對齊 Siming 實際的 maxCount=100。送更大的值會被靜默截斷，
+        // 查詢不報錯但計數會低估——那種失敗最難察覺。
+        #expect(parameters["_count"] == "100")
     }
 
     @Test("時間窗可調整，預設 24 小時")

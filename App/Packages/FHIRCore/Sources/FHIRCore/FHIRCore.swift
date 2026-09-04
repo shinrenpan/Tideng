@@ -43,5 +43,6 @@ public enum FHIR {
     public typealias Coding = ModelsR4.Coding
     public typealias Reference = ModelsR4.Reference
     public typealias Quantity = ModelsR4.Quantity
+    public typealias ObservationReferenceRange = ModelsR4.ObservationReferenceRange
     public typealias AdministrativeGender = ModelsR4.AdministrativeGender
 }

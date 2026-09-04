@@ -15,6 +15,13 @@
    `transaction` 是全有全無——佇列裡一筆壞資料會 rollback 整批，造成好資料被連坐、佇列卡死。
    `batch` 每個 entry 獨立成敗、獨立回應狀態 → 逐筆標記 synced/failed，壞資料隔離重試。
 
+   > ⚠️ **實測落差（2026-09-04）**：Siming 目前**只接受 `Bundle.type == transaction`**，
+   > 不支援 batch（`TransactionRoutes.swift` 的 guard）。這條判斷在自家 server 上還跑不起來。
+   >
+   > 兩條路：Siming 補 batch 語意，或改用逐筆 POST 帶 `If-None-Exist`——後者犧牲「一次往返
+   > 送多筆」的效率，但保住壞資料隔離這個真正重要的性質。**離線同步動工前必須先決定**，
+   > 不是寫到一半才發現。
+
 3. **冪等性用 client-assigned identifier + conditional create 解。**
    斷網重送的經典災難：server 已寫入但 response 沒回來 → client 重送 → 重複資料。
    解法：每筆佇列項目在資源裡帶 client UUID identifier，送出時用

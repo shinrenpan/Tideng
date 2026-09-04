@@ -58,7 +58,7 @@ extension ServerSetupViewModel.ServerPreset {
       // 所以問題會拖到按下登入才炸出來。
       baseURL: "http://localhost:8090/v/r4/sim/e30/fhir",
       clientID: "tideng",
-      note: String(localized: "The service started by Server/docker-compose.yml")
+      note: String(localized: "Local Siming with demo data, via the SMART launcher")
     ),
     .init(
       id: "smart-sandbox",
