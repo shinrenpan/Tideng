@@ -116,29 +116,24 @@ var observationSeq = 0
 for spec in SeedData.patients {
     guard let patientID = patientIDs[spec.seq] else { continue }
 
-    // 近 24 小時的病人對應「今日就診」；其餘落在 24–48 小時前，
-    // 讓 24 小時內的總數維持在 server 的 _count 上限之下。
-    let isRecent = SeedData.recentPatientSequences.contains(spec.seq)
-    let offsets: [TimeInterval] = isRecent
-        ? [-3 * hour, -9 * hour]
-        : [-30 * hour, -42 * hour]
+    // 走勢惡化的病人用 rising，其餘用 steady。每位病人都有跨越 48 小時的完整時序——
+    // 少於這個範圍就看不出走勢，而走勢正是趨勢圖存在的理由。
+    let isRising = SeedData.outOfRangeSequences.contains(spec.seq)
 
-    let isOutOfRange = SeedData.outOfRangeSequences.contains(spec.seq)
-
-    for offset in offsets {
+    for (index, hoursAgo) in SeedData.observationHoursAgo.enumerated() {
         for vital in SeedData.vitals {
             observationSeq += 1
-            // 只有指定的病人、且該項目有參考範圍時才取範圍外的值——
-            // 沒有範圍的項目給極端值也不該被判定為異常，那是 app 要證明的事。
-            let useAbnormal = isOutOfRange && vital.low != nil
-            let range = useAbnormal ? vital.abnormal : vital.normal
-            let value = (range.lowerBound + range.upperBound) / 2
+
+            // 只有帶參考範圍的項目才走 rising 到超出範圍；沒有範圍的項目
+            // 即使數值下降也不該被判定為異常，那是 app 要證明的事。
+            let trend = (isRising && vital.low != nil) ? vital.rising : vital.steady
+            let value = trend[min(index, trend.count - 1)]
 
             let (resource, identifier) = ResourceBuilder.observation(
                 patientID: patientID,
                 vital: vital,
-                value: (value * 10).rounded() / 10,
-                recordedAt: now.addingTimeInterval(offset),
+                value: value,
+                recordedAt: now.addingTimeInterval(-hoursAgo * hour),
                 seq: observationSeq
             )
             let outcome = try await client.post(

@@ -68,30 +68,47 @@ enum SeedData {
         /// server 提供的參考範圍。`nil` 表示刻意不給——用來示範 app 不對沒有依據的數值做判斷。
         let low: Double?
         let high: Double?
-        /// 正常範圍內的取值
-        let normal: ClosedRange<Double>
-        /// 刻意落在範圍外的取值
-        let abnormal: ClosedRange<Double>
+        /// 平穩的走勢，由舊到新。全部落在參考範圍內。
+        let steady: [Double]
+        /// 惡化中的走勢，由舊到新。最後一到兩點落在參考範圍外。
+        ///
+        /// 這是趨勢圖存在的理由：38.8 這個數字本身說明不了什麼，
+        /// 「從 37.0 一路升到 38.8」才是臨床要看的東西。
+        let rising: [Double]
     }
+
+    /// 每位病人的觀測時間點，由舊到新（小時前）。
+    ///
+    /// 跨越 48 小時是 spec 的要求——少於這個範圍就看不出走勢。
+    /// 其中兩點落在近 24 小時內，讓「超出參考值」切片有東西可算。
+    static let observationHoursAgo: [Double] = [42, 30, 9, 3]
 
     static let vitals: [VitalSpec] = [
         .init(code: LOINC.bodyTemperature, display: "體溫", unit: "°C", unitCode: "Cel",
-              low: 36.0, high: 37.5, normal: 36.2...37.2, abnormal: 38.2...39.4),
+              low: 36.0, high: 37.5,
+              steady: [36.6, 36.9, 37.1, 36.8],
+              rising: [37.0, 37.6, 38.3, 38.8]),
         .init(code: LOINC.heartRate, display: "心跳速率", unit: "次/分", unitCode: "/min",
-              low: 60, high: 100, normal: 66...92, abnormal: 104...126),
+              low: 60, high: 100,
+              steady: [72, 76, 74, 78],
+              rising: [88, 96, 108, 116]),
         .init(code: LOINC.respiratoryRate, display: "呼吸速率", unit: "次/分", unitCode: "/min",
-              low: 12, high: 20, normal: 13...19, abnormal: 22...27),
-        // 血氧刻意不帶參考範圍：即使數值偏低，app 也不得判定它異常
+              low: 12, high: 20,
+              steady: [14, 15, 16, 15],
+              rising: [18, 20, 23, 25]),
+        // 血氧刻意不帶參考範圍：即使數值一路下降，app 也不得判定它異常
         .init(code: LOINC.oxygenSaturation, display: "血氧飽和度", unit: "%", unitCode: "%",
-              low: nil, high: nil, normal: 95...99, abnormal: 89...93)
+              low: nil, high: nil,
+              steady: [98, 97, 97, 98],
+              rising: [96, 94, 92, 91])
     ]
 
-    /// 有近 24 小時觀測值的病人（對應「今日就診」）。
+    /// 今日有就診紀錄的病人。
     ///
-    /// 只有 8 位是刻意的：近 24 小時的觀測值總數必須低於 Siming 的 `_count` 上限 100，
-    /// 否則查詢會被靜默截斷、計數安靜地低估。8 × 2 個時間點 × 4 種 = 64 筆。
+    /// 生命徵象每位病人都有（趨勢圖需要），就診紀錄則只有這幾位——
+    /// 診所不會每位病人天天回診。
     static let recentPatientSequences = Set(1...8)
 
-    /// 觀測值落在參考範圍外的病人。
+    /// 走勢惡化、最新數值落在參考範圍外的病人。
     static let outOfRangeSequences = Set([2, 5, 7])
 }
