@@ -291,18 +291,43 @@ struct MainViewModelTests {
     let bundle = try TestSupport.bundle("""
     { "resourceType": "Bundle", "type": "searchset",
       "entry": [
-        { "resource": { "resourceType": "Encounter", "id": "e1", "status": "in-progress",
-                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p1" } } },
-        { "resource": { "resourceType": "Encounter", "id": "e2", "status": "in-progress",
-                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p1" } } },
-        { "resource": { "resourceType": "Encounter", "id": "e3", "status": "in-progress",
-                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p2" } } }
+        { "resource": { "resourceType": "Encounter", "id": "e1", "status": "finished",
+                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p1" },
+                        "period": { "start": "\(TestSupport.iso8601(daysAgo: 0))" } } },
+        { "resource": { "resourceType": "Encounter", "id": "e2", "status": "finished",
+                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p1" },
+                        "period": { "start": "\(TestSupport.iso8601(daysAgo: 0))" } } },
+        { "resource": { "resourceType": "Encounter", "id": "e3", "status": "finished",
+                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p2" },
+                        "period": { "start": "\(TestSupport.iso8601(daysAgo: 0))" } } }
       ] }
     """)
 
     await viewModel.doAction(.apiResponse(.sliceCount(.seenToday, .success(TestSupport.response(bundle)))))
 
     #expect(viewModel.state.slices[.seenToday]?.count == .exact(2))
+  }
+
+  @Test
+  func `今日就診的計數排除不是今天的就診`() async throws {
+    // 卡片文案宣告了「今日」，那個宣告必須為真。實測 Siming 的 Encounter?date=
+    // 完全沒有作用（連純日期都不生效），所以昨天的就診會跟著回來。
+    let viewModel = try makeViewModel()
+    let bundle = try TestSupport.bundle("""
+    { "resourceType": "Bundle", "type": "searchset",
+      "entry": [
+        { "resource": { "resourceType": "Encounter", "id": "e1", "status": "finished",
+                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p1" },
+                        "period": { "start": "\(TestSupport.iso8601(daysAgo: 0))" } } },
+        { "resource": { "resourceType": "Encounter", "id": "e2", "status": "finished",
+                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p2" },
+                        "period": { "start": "\(TestSupport.iso8601(daysAgo: 1))" } } }
+      ] }
+    """)
+
+    await viewModel.doAction(.apiResponse(.sliceCount(.seenToday, .success(TestSupport.response(bundle)))))
+
+    #expect(viewModel.state.slices[.seenToday]?.count == .exact(1))
   }
 
   @Test
@@ -397,8 +422,9 @@ struct MainViewModelPartialDecodeTests {
     let bundle = try TestSupport.bundle("""
     { "resourceType": "Bundle", "type": "searchset",
       "entry": [
-        { "resource": { "resourceType": "Encounter", "id": "e1", "status": "in-progress",
-                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p1" } } }
+        { "resource": { "resourceType": "Encounter", "id": "e1", "status": "finished",
+                        "class": { "code": "AMB" }, "subject": { "reference": "Patient/p1" },
+                        "period": { "start": "\(TestSupport.iso8601(daysAgo: 0))" } } }
       ] }
     """)
 

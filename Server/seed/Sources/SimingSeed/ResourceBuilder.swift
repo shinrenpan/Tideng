@@ -78,7 +78,13 @@ enum ResourceBuilder {
         patientID: String,
         practitionerID: String,
         seq: Int,
-        start: Date
+        start: Date,
+        /// 看診結束時間。`nil` 表示病人還在診間。
+        ///
+        /// 大部分就診都該有 end：小診所不會同時有 8 位病人在診間裡，而且沒有 `end`
+        /// 的 period 在 FHIR 裡代表「進行中／結束時間未知」，會被 `date=ge<未來>`
+        /// 這類查詢命中——那不是 server 的 bug，是這筆資料真的宣稱自己還沒結束。
+        end: Date?
     ) -> (resource: FHIR.Encounter, identifier: String) {
         let value = "encounter-\(seq)"
         var resource = FHIR.Encounter(
@@ -87,11 +93,14 @@ enum ResourceBuilder {
                 display: FHIRPrimitive(FHIRString("門診")),
                 system: FHIRPrimitive(FHIRURI(stringLiteral: "http://terminology.hl7.org/CodeSystem/v3-ActCode"))
             ),
-            status: FHIRPrimitive(EncounterStatus.inProgress)
+            status: FHIRPrimitive(end == nil ? EncounterStatus.inProgress : .finished)
         )
         resource.identifier = [.make(system: SeedData.identifierSystem, value: value)]
         resource.subject = .to("Patient", id: patientID)
-        resource.period = Period(start: start.asFHIRDateTime(in: SeedData.timeZone))
+        resource.period = Period(
+            end: end?.asFHIRDateTime(in: SeedData.timeZone),
+            start: start.asFHIRDateTime(in: SeedData.timeZone)
+        )
         resource.participant = [
             EncounterParticipant(individual: FHIR.Reference.to("Practitioner", id: practitionerID))
         ]

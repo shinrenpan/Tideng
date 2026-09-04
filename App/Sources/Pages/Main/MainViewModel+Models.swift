@@ -178,7 +178,13 @@ extension MainViewModel.SliceCount {
       return hasMore ? .atLeast(count) : .exact(count)
 
     case .seenToday:
-      return count(of: bundle.resources(of: FHIR.Encounter.self).map(\.subject), hasMore: hasMore)
+      // 時間窗必須在 client 端再守一次，理由與 outOfRange 相同：卡片文案宣告了
+      // 「今日」，那個宣告就必須為真。實測 Siming 的 `Encounter?date=` 完全沒有
+      // 作用——連純日期的形式都不生效，送 `date=ge2099-01-01` 照樣回傳全部。
+      let subjects = bundle.resources(of: FHIR.Encounter.self)
+        .filter { $0.started(on: Date()) }
+        .map(\.subject)
+      return count(of: subjects, hasMore: hasMore)
 
     case .onMedication:
       return count(of: bundle.resources(of: FHIR.MedicationRequest.self).map { $0.subject }, hasMore: hasMore)

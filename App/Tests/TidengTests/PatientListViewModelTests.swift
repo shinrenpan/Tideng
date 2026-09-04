@@ -177,7 +177,7 @@ struct PatientListViewModelTests {
   func `今日就診的病人來自 include 夾帶的 Patient`() async throws {
     let viewModel = try makeViewModel(slice: .seenToday)
     let response = try bundle(
-      #"{"resourceType":"Encounter","id":"e1","status":"in-progress","class":{"code":"AMB"},"subject":{"reference":"Patient/p1"}}"#,
+      #"{"resourceType":"Encounter","id":"e1","status":"finished","class":{"code":"AMB"},"subject":{"reference":"Patient/p1"},"period":{"start":"\#(TestSupport.iso8601(daysAgo: 0))"}}"#,
       #"{"resourceType":"Patient","id":"p1","name":[{"family":"林","given":["建宏"]}]}"#
     )
 
@@ -185,6 +185,35 @@ struct PatientListViewModelTests {
 
     #expect(viewModel.state.patients.count == 1)
     #expect(viewModel.state.patients.first?.name == "林建宏")
+  }
+
+  @Test
+  func `不是今天的就診不列入今日就診`() async throws {
+    // server 的 Encounter?date= 過濾不能信（實測 Siming 完全沒有作用），
+    // 所以昨天的就診會跟著回來——client 必須自己濾掉，否則卡片說「今日」卻列出全部。
+    let viewModel = try makeViewModel(slice: .seenToday)
+    let response = try bundle(
+      #"{"resourceType":"Encounter","id":"e1","status":"finished","class":{"code":"AMB"},"subject":{"reference":"Patient/p1"},"period":{"start":"\#(TestSupport.iso8601(daysAgo: 1))"}}"#,
+      #"{"resourceType":"Patient","id":"p1","name":[{"family":"林","given":["建宏"]}]}"#
+    )
+
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(response)))))
+
+    #expect(viewModel.state.patients.isEmpty)
+  }
+
+  @Test
+  func `沒有時間的就診不列入今日就診`() async throws {
+    // 時間不明時寧可少算，也不要把不知道時間的資料算進一個宣稱了「今日」的清單。
+    let viewModel = try makeViewModel(slice: .seenToday)
+    let response = try bundle(
+      #"{"resourceType":"Encounter","id":"e1","status":"in-progress","class":{"code":"AMB"},"subject":{"reference":"Patient/p1"}}"#,
+      #"{"resourceType":"Patient","id":"p1","name":[{"family":"林","given":["建宏"]}]}"#
+    )
+
+    await viewModel.doAction(.apiResponse(.patients(.success(TestSupport.response(response)))))
+
+    #expect(viewModel.state.patients.isEmpty)
   }
 
   @Test

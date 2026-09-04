@@ -130,12 +130,17 @@ var encounterTally = SeedTally()
 for seq in SeedData.recentPatientSequences.sorted() {
     guard let patientID = patientIDs[seq] else { continue }
     let practitionerID = practitionerIDs[seq % practitionerIDs.count]
+    // 今天稍早開始，分散在不同時段
+    let start = now.addingTimeInterval(-Double(seq % 6 + 1) * hour)
+    // 最後兩位病人還在診間，其餘看完離開了。小診所不會同時有 8 位病人在裡面，
+    // 而且開放式 period 在 FHIR 裡代表「還沒結束」，會被時間查詢一直命中。
+    let stillHere = SeedData.inProgressPatientSequences.contains(seq)
     let (resource, identifier) = ResourceBuilder.encounter(
         patientID: patientID,
         practitionerID: practitionerID,
         seq: seq,
-        // 今天稍早開始，分散在不同時段
-        start: now.addingTimeInterval(-Double(seq % 6 + 1) * hour)
+        start: start,
+        end: stillHere ? nil : start.addingTimeInterval(SeedData.consultationMinutes * 60)
     )
     let outcome = try await client.post(
         resource,

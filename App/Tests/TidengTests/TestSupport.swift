@@ -112,4 +112,18 @@ extension TestSupport {
     formatter.formatOptions = [.withInternetDateTime]
     return formatter.string(from: Date().addingTimeInterval(-hoursAgo * 3600))
   }
+
+  /// 當地日期上的正午，以天為單位偏移。
+  ///
+  /// 「今日就診」的判準是當地日期，所以不能用 `iso8601(hoursAgo:)` 造測試資料——
+  /// 「一小時前」在凌晨執行時是昨天，測試會在半夜莫名其妙開始失敗。取正午則
+  /// 不論何時執行都穩穩落在該日期內。
+  static func iso8601(daysAgo: Int) -> String {
+    let calendar = Calendar.current
+    let noonToday = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
+    let day = calendar.date(byAdding: .day, value: -daysAgo, to: noonToday)!
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime]
+    return formatter.string(from: day)
+  }
 }

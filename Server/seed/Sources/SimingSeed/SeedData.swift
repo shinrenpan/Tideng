@@ -110,6 +110,15 @@ enum SeedData {
     /// 診所不會每位病人天天回診。
     static let recentPatientSequences = Set(1...8)
 
+    /// 還在診間的病人（Encounter 沒有 `period.end`，status 為 in-progress）。
+    ///
+    /// 其餘的就診都已結束。全部開放式會讓「今日就診」這個切片對任何時間查詢都命中，
+    /// 而且 8 位病人同時在小診所的診間裡本來就不合理。
+    static let inProgressPatientSequences = Set([7, 8])
+
+    /// 一次門診的長度（分鐘）。
+    static let consultationMinutes: Double = 20
+
     /// 走勢惡化、最新數值落在參考範圍外的病人。
     static let outOfRangeSequences = Set([2, 5, 7])
 

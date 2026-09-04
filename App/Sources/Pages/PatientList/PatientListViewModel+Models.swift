@@ -179,11 +179,22 @@ extension PatientListViewModel.Slice {
     case .all:
       return included
 
-    case .seenToday, .onMedication:
+    case .onMedication:
       return included
 
+    case .seenToday:
+      // 與主畫面的計數用同一個判準：today 由 client 決定，不依賴 server 的
+      // `Encounter?date=`（實測 Siming 完全沒有作用，連純日期都不生效）。
+      let today = Date()
+      let references = Set(
+        bundle.resources(of: FHIR.Encounter.self)
+          .filter { $0.started(on: today) }
+          .compactMap { $0.subject?.reference?.value?.string }
+      )
+      return included.filter(matching: references)
+
     case .outOfRange:
-      // 與主畫面的計數用同一個時間窗——server 的 date 過濾不能信（實測 Siming 靜默無效）。
+      // 與主畫面的計數用同一個時間窗——server 的 date 過濾不能信。
       let cutoff = Date().addingTimeInterval(-MainViewModel.SliceCount.outOfRangeWindowHours * 3600)
       let references = Set(
         bundle.resources(of: FHIR.Observation.self)
@@ -191,10 +202,18 @@ extension PatientListViewModel.Slice {
           .filter { $0.referenceRangeStatus == .outside }
           .compactMap { $0.subject?.reference?.value?.string }
       )
-      return included.filter { patient in
-        guard let id = patient.id?.value?.string else { return false }
-        return references.contains("Patient/\(id)")
-      }
+      return included.filter(matching: references)
+    }
+  }
+}
+
+private extension Array where Element == FHIR.Patient {
+
+  /// 只留下被這批 reference 指到的病人。
+  func filter(matching references: Set<String>) -> [FHIR.Patient] {
+    filter { patient in
+      guard let id = patient.id?.value?.string else { return false }
+      return references.contains("Patient/\(id)")
     }
   }
 }
