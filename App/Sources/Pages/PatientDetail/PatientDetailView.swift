@@ -22,6 +22,23 @@ private extension PatientDetailViewModel.VitalSeries {
     }
   }
 
+  /// 已知的 UCUM 單位用在地化符號，未知的沿用 server 給的文字。
+  ///
+  /// 對照的鍵是 `Quantity.code`（UCUM）而不是 LOINC code——單位屬於「這個數值是什麼」，
+  /// 不能從項目種類反推。server 送華氏就該顯示華氏，否則等於竄改數值的意義。
+  var unitLabel: String {
+    switch unitCode {
+    case "Cel": String(localized: "°C")
+    case "[degF]": String(localized: "°F")
+    case "%": String(localized: "%")
+    case "/min": String(localized: "/min")
+    case "mm[Hg]": String(localized: "mmHg")
+    case "kg": String(localized: "kg")
+    case "cm": String(localized: "cm")
+    default: serverUnit
+    }
+  }
+
   /// 縱軸的顯示範圍。
   ///
   /// 同時涵蓋資料點與參考範圍，再往外留一點餘裕——否則貼著邊界的點會被切掉，
@@ -177,8 +194,8 @@ private extension PatientDetailView {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
           Text(series.title)
             .font(.subheadline.weight(.medium))
-          if !series.unit.isEmpty {
-            Text(series.unit)
+          if !series.unitLabel.isEmpty {
+            Text(series.unitLabel)
               .font(.caption)
               .foregroundStyle(.secondary)
           }

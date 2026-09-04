@@ -44,7 +44,10 @@ extension PatientDetailViewModel {
     let code: String
     /// server 提供的名稱。已知的 code 由 V 層改用在地化名稱，未知的就顯示這個。
     let serverDisplay: String
-    let unit: String
+    /// server 提供的單位文字。已知的 UCUM code 由 V 層改用在地化符號，未知的就顯示這個。
+    let serverUnit: String
+    /// UCUM 單位代碼。單位屬於「這個數值是什麼」，只能由它決定，不能從 LOINC code 反推。
+    let unitCode: String
     /// server 提供的參考範圍。`nil` 表示 server 沒給——**不得以內建值頂替**。
     let referenceRange: ReferenceBounds?
     /// 依時間遞增排序。排序在轉換階段完成，View 不負責排序。
@@ -87,7 +90,8 @@ extension PatientDetailViewModel.VitalSeries {
         return .init(
           code: code,
           serverDisplay: first.display,
-          unit: first.unit,
+          serverUnit: first.unit,
+          unitCode: first.unitCode,
           referenceRange: first.bounds,
           // server 的排序不可信（`_sort` 的未知欄位是靜默丟棄的），一律自己排
           points: group
@@ -107,6 +111,7 @@ private struct PlottableObservation {
   let code: String
   let display: String
   let unit: String
+  let unitCode: String
   let recordedAt: Date
   let value: Double
   let bounds: PatientDetailViewModel.ReferenceBounds?
@@ -126,6 +131,7 @@ private struct PlottableObservation {
       ?? observation.code.text?.value?.string
       ?? code
     self.unit = quantity.unit?.value?.string ?? ""
+    self.unitCode = quantity.code?.value?.string ?? ""
     self.recordedAt = recordedAt
     self.value = NSDecimalNumber(decimal: measured).doubleValue
 

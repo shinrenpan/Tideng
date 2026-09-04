@@ -119,8 +119,11 @@ struct PatientDetailViewModelTests {
 
     #expect(viewModel.state.series.count == 2)
     let byCode = Dictionary(uniqueKeysWithValues: viewModel.state.series.map { ($0.code, $0) })
-    #expect(byCode["8310-5"]?.unit == "°C")
-    #expect(byCode["8867-4"]?.unit == "次/分")
+    #expect(byCode["8310-5"]?.serverUnit == "°C")
+    #expect(byCode["8867-4"]?.serverUnit == "次/分")
+    // UCUM code 一併留著——顯示用的單位符號由它決定，不能從 LOINC code 反推
+    #expect(byCode["8310-5"]?.unitCode == "Cel")
+    #expect(byCode["8867-4"]?.unitCode == "/min")
   }
 
   @Test

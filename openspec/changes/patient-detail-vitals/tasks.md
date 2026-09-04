@@ -15,12 +15,12 @@
 - [x] 3.1 每種生命徵象各自一張圖，標註名稱與單位，點依時間排列。落實 design 決策「每種生命徵象一張獨立的圖」。驗證：模擬器截圖確認四種項目分開呈現且橫軸為時間
 - [x] 3.2 server 有提供參考範圍時畫出區間帶，沒有提供時不畫也不套用任何內建值。滿足 Requirement: Reference ranges are drawn as bounds, never as verdicts 的前兩個情境。落實 design 決策「參考範圍畫成區間帶，不對個別點著色」。驗證：截圖確認體溫等三項有帶子、血氧沒有
 - [x] 3.3 落在區間帶外的點外觀與其他點完全相同，無不同顏色、圖示或標籤。滿足同一 Requirement 的第三個情境。驗證：對 seed 中體溫超出範圍的病人截圖，確認該點與其他點無視覺差異
-- [ ] 3.4 單一觀測值仍渲染為一個點，不出現空圖或破圖。驗證：以 Preview 注入只有一筆資料的種類，確認呈現正常
+- [x] 3.4 單一觀測值仍渲染為一個點，不出現空圖或破圖。驗證：seed 的初診病人（潘冠宇）四項生命徵象各只有一筆，模擬器截圖確認各畫出一個點，無空圖或破圖
 
 ## 4. 導航
 
 - [x] 4.1 病人清單的列可點擊且外觀上看得出可點，選取後開啟該病人的詳情。滿足 Requirement: List rows open the patient。驗證：模擬器操作一次進入與返回
-- [ ] 4.2 從詳情返回後，清單的切片與關鍵字維持原樣。滿足 Requirement: Returning to the list preserves its state。落實 design 決策「導航沿用內容區的 NavigationStack」。驗證：模擬器操作——輸入關鍵字、進入詳情、返回，確認關鍵字與過濾結果仍在
+- [x] 4.2 從詳情返回後，清單的切片與關鍵字維持原樣。滿足 Requirement: Returning to the list preserves its state。落實 design 決策「導航沿用內容區的 NavigationStack」。驗證：模擬器操作——輸入關鍵字、進入詳情、返回，確認關鍵字與過濾結果仍在
 
 ## 5. 文案與整體驗證
 

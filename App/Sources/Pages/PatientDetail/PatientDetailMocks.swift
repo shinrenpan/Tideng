@@ -20,7 +20,8 @@ extension PatientDetailViewModel.VitalSeries {
     .init(
       code: "8310-5",
       serverDisplay: "體溫",
-      unit: "°C",
+      serverUnit: "°C",
+      unitCode: "Cel",
       referenceRange: .init(low: 36.0, high: 37.5),
       points: points(values: [36.8, 37.1, 37.4, 38.8])
     )
@@ -31,7 +32,8 @@ extension PatientDetailViewModel.VitalSeries {
     .init(
       code: "59408-5",
       serverDisplay: "血氧飽和度",
-      unit: "%",
+      serverUnit: "%",
+      unitCode: "%",
       referenceRange: nil,
       points: points(values: [97, 96, 95, 91])
     )
@@ -42,7 +44,8 @@ extension PatientDetailViewModel.VitalSeries {
     .init(
       code: "8867-4",
       serverDisplay: "心跳速率",
-      unit: "次/分",
+      serverUnit: "次/分",
+      unitCode: "/min",
       referenceRange: .init(low: 60, high: 100),
       points: points(values: [78])
     )
