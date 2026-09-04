@@ -21,6 +21,30 @@ enum ResourceBuilder {
         return (resource, value)
     }
 
+    // MARK: - PractitionerRole
+
+    static func practitionerRole(
+        practitionerID: String,
+        spec: SeedData.RoleSpec
+    ) -> (resource: FHIR.PractitionerRole, identifier: String) {
+        let value = "practitioner-role-\(spec.seq)"
+        var resource = FHIR.PractitionerRole()
+        resource.identifier = [.make(system: SeedData.identifierSystem, value: value)]
+        resource.practitioner = .to("Practitioner", id: practitionerID)
+        resource.active = FHIRPrimitive(FHIRBool(true))
+        resource.code = [
+            FHIR.CodeableConcept(
+                coding: [FHIR.Coding(
+                    code: FHIRPrimitive(FHIRString(spec.code)),
+                    display: FHIRPrimitive(FHIRString(spec.codeDisplay)),
+                    system: FHIRPrimitive(FHIRURI(stringLiteral: SeedData.practitionerRoleSystem))
+                )],
+                text: FHIRPrimitive(FHIRString(spec.text))
+            )
+        ]
+        return (resource, value)
+    }
+
     // MARK: - Patient
 
     static func patient(_ spec: SeedData.PersonSpec) -> (resource: FHIR.Patient, identifier: String) {

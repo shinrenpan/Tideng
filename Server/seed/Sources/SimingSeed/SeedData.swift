@@ -112,6 +112,29 @@ enum SeedData {
     /// 走勢惡化、最新數值落在參考範圍外的病人。
     static let outOfRangeSequences = Set([2, 5, 7])
 
+    // MARK: - 醫事人員的角色
+
+    /// HL7 的 practitioner-role 碼系統。
+    static let practitionerRoleSystem = "http://terminology.hl7.org/CodeSystem/practitioner-role"
+
+    /// 一位醫事人員在機構裡扮演的角色。
+    ///
+    /// `code` / `codeDisplay` 走 HL7 標準碼與**該碼系統自己的英文名**——display 的語意是
+    /// 「這個碼在該系統裡的意思」，塞中文進去等於改寫別人的碼系統。
+    /// 人看的中文職稱放 `CodeableConcept.text`，那正是它的用途。
+    struct RoleSpec {
+        let seq: Int
+        let code: String
+        let codeDisplay: String
+        let text: String
+    }
+
+    static let practitionerRoles: [RoleSpec] = [
+        .init(seq: 1, code: "doctor", codeDisplay: "Doctor", text: "主治醫師"),
+        .init(seq: 2, code: "nurse",  codeDisplay: "Nurse",  text: "護理師"),
+        .init(seq: 3, code: "doctor", codeDisplay: "Doctor", text: "主治醫師")
+    ]
+
     /// 初診病人：只有最近一次紀錄，沒有可比較的歷史。
     ///
     /// 這種病人在診所裡本來就存在，而且他讓「單一觀測值也要畫得出來」

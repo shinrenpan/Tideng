@@ -139,9 +139,15 @@ extension MainViewModel.PractitionerIdentity {
   init(reference: String, payload: MainViewModel.IdentityPayload) {
     self.reference = reference
     self.name = payload.practitioner?.name?.firstDisplayText
+    // `text` 的語意就是「給人看的表示法」，所以優先採用——而且許多 server 用的是院內
+    // 自訂術語，只給 text 不給 coding。`coding.display` 是「這個碼在該碼系統裡的意思」，
+    // 是次選：拿標準碼的 server 會在那裡放碼系統自己的名稱（例如 HL7 的 "Doctor"）。
     self.role = payload.roles
       .compactMap { role in
-        role.code?.compactMap { $0.coding?.compactMap { $0.display?.value?.string }.first }.first
+        role.code?.compactMap { concept in
+          concept.text?.value?.string
+            ?? concept.coding?.compactMap { $0.display?.value?.string }.first
+        }.first
       }
       .first
   }

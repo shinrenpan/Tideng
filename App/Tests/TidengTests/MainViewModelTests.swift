@@ -53,6 +53,47 @@ struct MainViewModelTests {
   }
 
   @Test
+  func `職位優先採用 text 而不是 coding 的 display`() async throws {
+    let viewModel = try makeViewModel()
+    await viewModel.doAction(.apiRequest(.loadIdentity))
+
+    // 標準碼的 display 是該碼系統自己的名稱；院所給人看的職稱放在 text。
+    let role = try TestSupport.decode(FHIR.PractitionerRole.self, """
+    { "resourceType": "PractitionerRole",
+      "code": [{
+        "coding": [{
+          "system": "http://terminology.hl7.org/CodeSystem/practitioner-role",
+          "code": "doctor", "display": "Doctor"
+        }],
+        "text": "主治醫師"
+      }] }
+    """)
+
+    await viewModel.doAction(.apiResponse(.identity(.success(
+      .init(practitioner: nil, roles: [role])
+    ))))
+
+    #expect(viewModel.state.practitioner?.role == "主治醫師")
+  }
+
+  @Test
+  func `沒有 text 時退回 coding 的 display`() async throws {
+    let viewModel = try makeViewModel()
+    await viewModel.doAction(.apiRequest(.loadIdentity))
+
+    let role = try TestSupport.decode(FHIR.PractitionerRole.self, """
+    { "resourceType": "PractitionerRole",
+      "code": [{ "coding": [{ "code": "nurse", "display": "Nurse" }] }] }
+    """)
+
+    await viewModel.doAction(.apiResponse(.identity(.success(
+      .init(practitioner: nil, roles: [role])
+    ))))
+
+    #expect(viewModel.state.practitioner?.role == "Nurse")
+  }
+
+  @Test
   func `有姓名但沒有職位時 role 為 nil 而不是空字串`() async throws {
     // 空字串會讓 View 畫出一行看不見的空白佔位；nil 才能讓它整行消失。
     let viewModel = try makeViewModel()

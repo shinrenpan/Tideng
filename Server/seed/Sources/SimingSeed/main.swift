@@ -49,6 +49,8 @@ let hour: TimeInterval = 3600
 
 var practitionerTally = SeedTally()
 var practitionerIDs: [String] = []
+/// seq → server 分配的 id。角色要掛回正確的人，不能靠陣列位置（有人建立失敗就會錯位）。
+var practitionerIDBySeq: [Int: String] = [:]
 
 for spec in SeedData.practitioners {
     let (resource, identifier) = ResourceBuilder.practitioner(spec)
@@ -59,12 +61,38 @@ for spec in SeedData.practitioners {
         identifierValue: identifier
     )
     practitionerTally.record(outcome, identifier: identifier)
-    if let id = outcome.id { practitionerIDs.append(id) }
+    if let id = outcome.id {
+        practitionerIDs.append(id)
+        practitionerIDBySeq[spec.seq] = id
+    }
 }
 
 guard !practitionerIDs.isEmpty else {
     FileHandle.standardError.write(Data("沒有任何 Practitioner 建立成功，後續資源無法引用\n".utf8))
     exit(1)
+}
+
+// MARK: - PractitionerRole
+
+var practitionerRoleTally = SeedTally()
+
+for spec in SeedData.practitionerRoles {
+    guard let practitionerID = practitionerIDBySeq[spec.seq] else { continue }
+    let (resource, identifier) = ResourceBuilder.practitionerRole(
+        practitionerID: practitionerID,
+        spec: spec
+    )
+    let outcome = try await client.post(
+        resource,
+        type: "PractitionerRole",
+        identifierSystem: SeedData.identifierSystem,
+        identifierValue: identifier,
+        // 這個 resource 的 identifier 在 Siming 上沒有索引，拿它當條件會比對到
+        // 不相干的資源、然後靜默跳過。practitioner 有索引，而且語意也更對：
+        // 這位醫事人員已經有角色就不要重建。
+        condition: "practitioner=\(practitionerID)"
+    )
+    practitionerRoleTally.record(outcome, identifier: identifier)
 }
 
 // MARK: - Patient
@@ -191,6 +219,7 @@ for (index, medication) in medications.enumerated() {
 print("")
 let results: [(String, SeedTally)] = [
     ("Practitioner", practitionerTally),
+    ("PractitionerRole", practitionerRoleTally),
     ("Patient", patientTally),
     ("Encounter", encounterTally),
     ("Observation", observationTally),

@@ -24,19 +24,26 @@ struct FHIRSeedClient {
     let baseURL: URL
     private let session = URLSession(configuration: .ephemeral)
 
+    /// - Parameter condition: conditional create 的比對條件，預設用 identifier。
+    ///
+    ///   之所以可覆寫：**server 只在有索引的 search param 上真的過濾**。拿一個沒索引的
+    ///   參數當條件，查詢會回傳未過濾的結果、比對到不相干的資源，於是 server 回
+    ///   「已存在」而**靜默不寫入**——而且回報成功。實測 Siming 的 PractitionerRole
+    ///   只索引 `practitioner`，用 identifier 當條件時第二筆之後全部被吃掉。
     func post<T: FHIR.Resource & Encodable>(
         _ resource: T,
         type: String,
         identifierSystem: String,
-        identifierValue: String
+        identifierValue: String,
+        condition: String? = nil
     ) async throws -> Outcome {
         var request = URLRequest(url: baseURL.appendingPathComponent(type))
         request.httpMethod = "POST"
         request.setValue("application/fhir+json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/fhir+json", forHTTPHeaderField: "Accept")
-        // 冪等的關鍵：以 client 指定的 identifier 做 conditional create
+        // 冪等的關鍵：conditional create。條件必須落在 server 真的有索引的參數上。
         request.setValue(
-            "identifier=\(identifierSystem)|\(identifierValue)",
+            condition ?? "identifier=\(identifierSystem)|\(identifierValue)",
             forHTTPHeaderField: "If-None-Exist"
         )
 
