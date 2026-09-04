@@ -25,4 +25,4 @@
 ## 5. 文案與整體驗證
 
 - [x] 5.1 詳情頁新增的所有使用者可見文案在 en 與 zh-Hant 皆到位，且不含任何判讀用語（異常、偏高、偏低、疑似、需注意、建議）。滿足 Requirement: No interpretive wording anywhere in the view。驗證：xcstringstool sync 後 stale 為 0、未翻譯為 0，並人工複查新增條目用字
-- [ ] 5.2 完整流程對 seed 資料在模擬器上以英文與繁中各跑一次並截圖，確認趨勢圖在兩種語言與深淺色下皆正確。驗證：以 -AppleLanguages 分別啟動截圖比對
+- [x] 5.2 完整流程對 seed 資料在模擬器上以英文與繁中各跑一次並截圖，確認趨勢圖在兩種語言與深淺色下皆正確。驗證：以 -AppleLanguages 分別啟動截圖比對

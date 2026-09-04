@@ -95,6 +95,23 @@ Literals must sit directly inside `Text()` / `String(localized:)`. Passing a
 `LocalizedStringKey` as a parameter lands it in `__PotentialKeys` and gets it flagged stale —
 someone cleaning up by the warning then deletes a live translation.
 
+### What the app may localize, and what it may not
+
+The app owns the *label* for a thing it can identify; it does not own the server's data.
+Two rules, and the boundary between them is not obvious:
+
+- **Names** are keyed off the LOINC `code`, never the server's `display` — the same vital
+  arrives as English, an abbreviation or blank depending on the server. Unknown code falls
+  back to `display`.
+- **Units** are keyed off the UCUM `Quantity.code`, never the LOINC code. A unit says what
+  the number *is*. Deriving it from the observation type would render a server's 100.4 °F
+  as 100.4 °C — that is altering the value's meaning, not translating it. Unknown UCUM code
+  falls back to the server's `Quantity.unit` string.
+
+Only rate units actually differ by locale (`/min` is written 次/分 in Taiwanese charting);
+`°C`, `%`, `mmHg` are universal but still go through the catalog so a future locale has
+somewhere to change them.
+
 Things that deliberately stay untranslated (`shouldTranslate: false`): the example URL
 `https://example.org/fhir` and the `client_id` field name — translating them would leave the
 user unsure what to type.

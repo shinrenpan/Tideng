@@ -45,11 +45,12 @@ demo 階段只能靠 Siming 或公開 sandbox。
 | 側邊欄主畫面（`NavigationSplitView`） | `Sources/Pages/Main` |
 | 病人清單（真實資料、切片、搜尋、四態、下拉刷新） | `Sources/Pages/PatientList` |
 | 主畫面兩層導航：身分 header、大分類、病人切片 grid 與計數 | `Sources/Pages/Main` |
+| 病人詳情 + 生命徵象趨勢圖（Swift Charts、參考範圍帶、四態） | `Sources/Pages/PatientDetail` |
 | 本機 SMART launcher | `Server/docker-compose.yml` |
 | Siming 接上（Phase B）+ 台灣示範資料 seed | `Server/seed/`（Swift executable） |
 
-Spectra 的第一個 change `main-navigation` 已完成並歸檔，產出兩個正式 capability
-（`clinical-dashboard`、`patient-list`，共 13 條 requirement、40 個 scenario）。
+Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-detail-vitals`，
+產出四個正式 capability（`clinical-dashboard`、`patient-list`、`patient-detail`、`demo-data`）。
 其中兩條是這個產品的法規界線，現在寫在正式規格裡而非埋在某個 change 目錄：
 **使用者可見文字只陳述事實不做判讀**、**超出參考值只採用 server 提供的 referenceRange**。
 
@@ -110,7 +111,6 @@ Spectra 的第一個 change `main-navigation` 已完成並歸檔，產出兩個�
 
 ## 3. 還沒做的
 
-- 病人詳情 + 生命徵象趨勢圖 ← **下一步**。seed 已備妥每位病人 48 小時的時序資料
 - 版面粗糙處：搜尋框飄在右上角、清單列太寬
 - TW Core 驗證
 - 寫入路徑、離線佇列、給藥核對、AuditEvent、session 安全（背景遮罩 / 閒置鎖定）
@@ -174,7 +174,5 @@ launcher base URL 的 `sim` 段）記在 [`../App/CLAUDE.md`](../App/CLAUDE.md)�
 
 ## 6. 下一步
 
-1. **病人詳情 + 生命徵象趨勢圖**（Swift Charts）——dashboard 真正的賣點。前置條件已備妥：
-   seed 有每位病人 48 小時的時序資料
-2. 修版面粗糙處（搜尋框位置、清單列寬度）
-3. TW Core profile 驗證（需啟用 HL7 Validator sidecar）
+1. 修版面粗糙處（搜尋框位置、清單列寬度）
+2. TW Core profile 驗證（需啟用 HL7 Validator sidecar）
