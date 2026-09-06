@@ -48,16 +48,28 @@ demo 階段只能靠 Siming 或公開 sandbox。
 | 病人清單（真實資料、切片、搜尋、四態、下拉刷新） | `Sources/Pages/PatientList` |
 | 主畫面兩層導航：身分 header、大分類、病人切片 grid 與計數 | `Sources/Pages/Main` |
 | 病人詳情 + 生命徵象趨勢圖（Swift Charts、參考範圍帶、四態） | `Sources/Pages/PatientDetail` |
+| 四張卡片各自的終點頁：病歷（identifier 依型別分辨）、就診（開放式 period）、用藥（timing 照實呈現） | `Sources/Pages/PatientRecord`、`PatientEncounters`、`PatientMedications` |
 | `id_token` 簽章與 issuer 驗證（jwks、快取、驗不過只讓身分留白） | `App/Packages/SmartAuth` |
 | 開發環境：Keycloak（帳密登入）+ Siming + Postgres，一個指令起完 | `Server/docker-compose.yml`、`Server/keycloak/` |
 | Siming 接上（Phase B）+ 台灣示範資料 seed | `Server/seed/`（Swift executable） |
 
-Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-detail-vitals`，
-產出四個正式 capability（`clinical-dashboard`、`patient-list`、`patient-detail`、`demo-data`）。
+Spectra 已歸檔五個 change：`main-navigation`、`demo-data`、`patient-detail-vitals`、
+`real-auth-environment`、`resource-destinations`，產出七個正式 capability（`clinical-dashboard`、
+`patient-list`、`patient-detail`、`demo-data`、`patient-record`、`encounter-status`、
+`medication-list`）。
 其中兩條是這個產品的法規界線，現在寫在正式規格裡而非埋在某個 change 目錄：
 **使用者可見文字只陳述事實不做判讀**、**超出參考值只採用 server 提供的 referenceRange**。
 
-三個 package 共 103 個測試，app target 另有 77 個。
+三個 package 共 106 個測試，app target 另有 112 個。
+
+四張切片卡片現在各自走到不同的終點頁，一頁對應一個 FHIR resource 家族。每一頁守住一條
+**記錄沒說的事就不說**的線，而且每一條都以變異測試確認過驗收會轉紅：
+
+| 終點 | 守住的那條線 |
+|---|---|
+| 病歷（`Patient`） | identifier 依 type 分辨；辨識不出用途的不顯示，不讓一個裸號碼被讀成病歷號 |
+| 就診（`Encounter`） | 開放式 period 呈現為尚未結束，**不以當下時間替代**；顯示記錄的 `status`，不從 period 推導 |
+| 用藥（`MedicationRequest`） | `timing` 照實呈現，**絕不展開成具體時間**——「一天三次」沒有說是哪三次，那由機構的給藥常規決定，不在 FHIR 資料裡 |
 
 測試裡值得一提的三個：PKCE 用 **RFC 7636 附錄 B 的官方測試向量**驗證（證明符合規格而非
 自洽）；`aud` 參數有獨立測試（SMART 最常被漏、漏了部分 server 直接拒絕）；**10 個並發請求
@@ -169,7 +181,6 @@ server 端的過濾對這個 app 是**效能**，不是正確性。三處宣告�
 ## 3. 還沒做的
 
 - 版面粗糙處：搜尋框飄在右上角、清單列太寬
-- 用藥清單：「用藥中」那張卡片點進去只有病人清單，整個 app 看不到藥
 - TW Core 驗證
 - 寫入路徑、離線佇列、給藥核對、AuditEvent、session 安全（背景遮罩 / 閒置鎖定）
 - MDM Managed App Configuration ← 機構透過 THAS 訂閱時會需要
@@ -232,7 +243,7 @@ launcher base URL 的 `sim` 段）記在 [`../App/CLAUDE.md`](../App/CLAUDE.md)�
 
 ## 6. 下一步
 
-1. **用藥清單** —— 四張切片卡片裡唯一沒有終點的一張
+1. 對外的 README —— repo 要公開，而現在沒有一份文件說得出這個專案在展示什麼
 2. 修版面粗糙處（搜尋框位置、清單列寬度）
 3. TW Core profile 驗證（需啟用 HL7 Validator sidecar）
 
