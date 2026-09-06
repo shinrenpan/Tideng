@@ -28,7 +28,7 @@
 
 - [x] 6.1 三個新頁面各自具備載入中、成功有內容、成功無內容、失敗四種狀態，且已有內容時失敗不清空——與既有清單一致。驗證：TidengTests 對三個頁面各涵蓋四種情境，並各斷言一次「已有內容時收到失敗，內容仍在」
 - [x] 6.2 三頁的查詢建構集中在既有的具名查詢集合，排序在 client 端完成，不依賴 server 的 `_sort`。落實決策「三頁共用一種「取這個病人的某類資源」的查詢形狀」。驗證：FHIRClientTests 對三個新查詢各斷言送出的 resourceType 與 patient 參數；TidengTests 注入亂序回應斷言排序由 client 完成
-- [ ] 6.3 三頁新增的所有使用者可見文案在 en 與 zh-Hant 皆到位，且不含判讀用語（異常、偏高、需注意、建議、應調整、疑似、逾期）。滿足 Requirement: The record view states facts and never characterises the patient、Requirement: The encounter view states facts and never characterises the visit、Requirement: The medication view offers no clinical judgement。驗證：xcstringstool sync 後 stale 為 0、未翻譯為 0，並逐條人工複查新增字串；特別檢查「未指定時間」的文案不含任何要求使用者採取行動的字眼
+- [x] 6.3 三頁新增的所有使用者可見文案在 en 與 zh-Hant 皆到位，且不含判讀用語（異常、偏高、需注意、建議、應調整、疑似、逾期）。滿足 Requirement: The record view states facts and never characterises the patient、Requirement: The encounter view states facts and never characterises the visit、Requirement: The medication view offers no clinical judgement。驗證：xcstringstool sync 後 stale 為 0、未翻譯為 0，並逐條人工複查新增字串；特別檢查「未指定時間」的文案不含任何要求使用者採取行動的字眼
 
 ## 7. 整體驗證
 

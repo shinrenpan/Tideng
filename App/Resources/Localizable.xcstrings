@@ -11,6 +11,48 @@
         }
       }
     },
+    "%@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%lld times per %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld times per %2$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每%2$@ %1$lld 次"
+          }
+        }
+      }
+    },
+    "%lld yrs": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 歲"
+          }
+        }
+      }
+    },
     "%lld+": {
       "localizations": {
         "zh-Hant": {
@@ -31,12 +73,32 @@
         }
       }
     },
+    "Active": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用中"
+          }
+        }
+      }
+    },
     "Advanced": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "進階"
+          }
+        }
+      }
+    },
+    "Age": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年齡"
           }
         }
       }
@@ -51,12 +113,72 @@
         }
       }
     },
+    "Arrived": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已報到"
+          }
+        }
+      }
+    },
+    "As needed": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要時服用"
+          }
+        }
+      }
+    },
+    "As needed: %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要時服用：%@"
+          }
+        }
+      }
+    },
     "Can't load patients": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "讀不到病人清單"
+          }
+        }
+      }
+    },
+    "Can't load prescriptions": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法載入處方"
+          }
+        }
+      }
+    },
+    "Can't load this record": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法載入這筆病歷"
+          }
+        }
+      }
+    },
+    "Can't load visits": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法載入就診記錄"
           }
         }
       }
@@ -81,6 +203,16 @@
         }
       }
     },
+    "Cancelled": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消"
+          }
+        }
+      }
+    },
     "Check compatibility with external servers": {
       "localizations": {
         "zh-Hant": {
@@ -97,6 +229,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Client ID"
+          }
+        }
+      }
+    },
+    "Completed": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已完成"
           }
         }
       }
@@ -161,12 +303,52 @@
         }
       }
     },
+    "Date of Birth": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生日"
+          }
+        }
+      }
+    },
     "Diastolic Blood Pressure": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "舒張壓"
+          }
+        }
+      }
+    },
+    "Draft": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "草稿"
+          }
+        }
+      }
+    },
+    "Ended": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "結束"
+          }
+        }
+      }
+    },
+    "Entered in error": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "誤登"
           }
         }
       }
@@ -191,12 +373,62 @@
         }
       }
     },
+    "Finished": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已結束"
+          }
+        }
+      }
+    },
+    "Gender": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "性別"
+          }
+        }
+      }
+    },
     "Heart Rate": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "心跳速率"
+          }
+        }
+      }
+    },
+    "Identifiers": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "識別號碼"
+          }
+        }
+      }
+    },
+    "Identity": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "身分"
+          }
+        }
+      }
+    },
+    "In progress": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進行中"
           }
         }
       }
@@ -241,6 +473,26 @@
         }
       }
     },
+    "Medical Record Number": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "病歷號"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "姓名"
+          }
+        }
+      }
+    },
     "Name or record number": {
       "localizations": {
         "zh-Hant": {
@@ -251,12 +503,62 @@
         }
       }
     },
+    "National ID": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "身分證字號"
+          }
+        }
+      }
+    },
+    "No identifier on this record could be recognised by type.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這筆記錄的識別號碼都沒有可辨識的型別。"
+          }
+        }
+      }
+    },
     "No patients on this server": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "這個伺服器上沒有病人資料"
+          }
+        }
+      }
+    },
+    "No prescriptions recorded for this patient": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這位病人沒有處方記錄"
+          }
+        }
+      }
+    },
+    "No record for this patient": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到這位病人的病歷"
+          }
+        }
+      }
+    },
+    "No visits recorded for this patient": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這位病人沒有就診記錄"
           }
         }
       }
@@ -281,12 +583,52 @@
         }
       }
     },
+    "Not recorded — the period is still open": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未記錄——這段就診尚未結束"
+          }
+        }
+      }
+    },
     "On Medication": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "用藥中"
+          }
+        }
+      }
+    },
+    "On hold": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫停"
+          }
+        }
+      }
+    },
+    "On leave": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請假中"
+          }
+        }
+      }
+    },
+    "Only identifiers labelled with a known type are shown.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只顯示標明了型別的識別號碼。"
           }
         }
       }
@@ -327,6 +669,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "病人"
+          }
+        }
+      }
+    },
+    "Planned": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已排定"
+          }
+        }
+      }
+    },
+    "Practitioner": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "醫事人員"
+          }
+        }
+      }
+    },
+    "Prescribed by": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開立者"
           }
         }
       }
@@ -431,6 +803,26 @@
         }
       }
     },
+    "Started": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開始"
+          }
+        }
+      }
+    },
+    "Stopped": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已停用"
+          }
+        }
+      }
+    },
     "Systolic Blood Pressure": {
       "localizations": {
         "zh-Hant": {
@@ -467,6 +859,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "伺服器位址不正確。"
+          }
+        }
+      }
+    },
+    "The schedule on this record could not be read.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這筆記錄的時程無法解讀。"
           }
         }
       }
@@ -531,6 +933,16 @@
         }
       }
     },
+    "This visit has no recorded time.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這次就診沒有記錄時間。"
+          }
+        }
+      }
+    },
     "Tideng": {
       "localizations": {
         "zh-Hant": {
@@ -551,12 +963,42 @@
         }
       }
     },
+    "Times of day are not specified in this record.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這筆記錄未指定給藥時間。"
+          }
+        }
+      }
+    },
+    "Triaged": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已分級"
+          }
+        }
+      }
+    },
     "Try Again": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "重新載入"
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不詳"
           }
         }
       }
@@ -604,6 +1046,46 @@
         }
       }
     },
+    "day": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日"
+          }
+        }
+      }
+    },
+    "days": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日"
+          }
+        }
+      }
+    },
+    "hour": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小時"
+          }
+        }
+      }
+    },
+    "hours": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小時"
+          }
+        }
+      }
+    },
     "https://example.org/fhir": {
       "shouldTranslate": false
     },
@@ -617,12 +1099,112 @@
         }
       }
     },
+    "minute": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分鐘"
+          }
+        }
+      }
+    },
+    "minutes": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分鐘"
+          }
+        }
+      }
+    },
     "mmHg": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
             "value": "mmHg"
+          }
+        }
+      }
+    },
+    "month": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月"
+          }
+        }
+      }
+    },
+    "months": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月"
+          }
+        }
+      }
+    },
+    "second": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "秒"
+          }
+        }
+      }
+    },
+    "seconds": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "秒"
+          }
+        }
+      }
+    },
+    "week": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "週"
+          }
+        }
+      }
+    },
+    "weeks": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "週"
+          }
+        }
+      }
+    },
+    "year": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年"
+          }
+        }
+      }
+    },
+    "years": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年"
           }
         }
       }
