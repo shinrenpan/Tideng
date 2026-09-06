@@ -150,6 +150,7 @@ Siming 對 `aud` 的比對是**完全字串相等、大小寫敏感、不做任�
 - **issuer 被寫進每一張 token** → 位址一律由設定提供；`.env.example` 以註解說明改動 issuer 會使既有 token 失效
 - **`aud` 兩端不一致（尤其尾斜線）會表現為「token 有效但 401」** → 比對規則已確認為完全字串相等，見上方決策；三處由同一環境變數供給，並以一則刻意錯誤 audience 的 token 應得 401 作為驗收
 - **Siming 的 image 可能安靜地少掉 terminology** — 它的 `packages/*.tgz` 是 gitignored、`scripts/` 在 `.dockerignore` 內，因此從乾淨 clone 建置會得到空的 packages 目錄。後果不是建置失敗：server 正常啟動、`/health` 回 200、每個 endpoint 都可連線，只有 CapabilityStatement 從 76,643 位元組塌成 11,488 → 驗收必須斷言回應長度，而不是「容器起得來」
+- **compose 把未設的變數渲染成空字串，不是 unset** — 只檢查 `nil` 的守則擋不住 `VAR=""`，而容器化環境大量產生這種形狀。Siming 端已把空與純空白正規化為未設並在半套設定時啟動失敗；`SMART_ISSUER=""` 則刻意處理成啟動失敗而非關閉認證（正規化成「未設」會讓一個 typo 變成「FHIR 完全不需認證」，那是 fail open）→ 本案的變異確認必須同時涵蓋「整行刪掉」與「值為空字串」兩種形狀
 - **防呆測試本身可能被沉默地滿足** — `SMART_AUDIENCE` 未設定時 Siming 完全不檢查 `aud`，於是「錯誤 audience 應得 401」這條斷言會在設定遺漏的環境下假性通過 → 該測試必須先斷言 `SMART_AUDIENCE` 非空。這是本案第二次遇到同一形狀：檢查通過了，但檢查的不是真正重要的那件事
 - **Siming 的 image 每次都完整重建** — 它的 Dockerfile 在 `swift build` 之前 `COPY . .`，沒有依賴快取層，任何檔案變動都會重編全部依賴 → 日常開發不重建 image，只在 Siming 有變更時重建；若迴圈受影響再請 Siming 端拆出依賴層
 - **Keycloak 啟動較慢，拖慢開發迴圈** → 它不隨程式碼變動重啟；日常只重啟 Siming

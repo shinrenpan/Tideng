@@ -51,14 +51,20 @@ extension ServerSetupViewModel.ServerPreset {
 
   static let builtIn: [Self] = [
     .init(
-      id: "local-launcher",
-      name: String(localized: "Local SMART Launcher"),
-      // `sim/e30` 的 e30 是 base64url("{}")，也就是最小的 launch options。
-      // 少了 sim 這一段，authorize 會回 "Invalid launch options" —— discovery 卻是通的，
-      // 所以問題會拖到按下登入才炸出來。
-      baseURL: "http://localhost:8090/v/r4/sim/e30/fhir",
+      id: "local-siming",
+      name: String(localized: "Local Siming"),
+      // 直接指向 Siming，不再經過 smart-launcher-v2 的代理。
+      //
+      // 授權伺服器改由 Keycloak 擔任，位址寫在 Siming 的
+      // `.well-known/smart-configuration` 裡，由 app 從 discovery 取得——
+      // 所以這裡不需要（也不該）知道 Keycloak 在哪。
+      //
+      // 尾斜線很重要：這個字串會原樣成為 authorize 請求的 `aud` 參數，
+      // 而 server 端的比對是完全字串相等，多一個斜線就是「token 有效但每個
+      // 請求都 401」。它必須與 Siming 的 SMART_AUDIENCE 逐字元相同。
+      baseURL: "http://localhost:8080",
       clientID: "tideng",
-      note: String(localized: "Local Siming with demo data, via the SMART launcher")
+      note: String(localized: "Local Siming with demo data, signing in through Keycloak")
     ),
     .init(
       id: "smart-sandbox",

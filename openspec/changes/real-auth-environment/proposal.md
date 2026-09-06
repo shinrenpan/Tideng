@@ -34,8 +34,9 @@
 - Affected specs: `smart-authentication`（新增）、`auth-environment`（新增）、`demo-data`（修改）
 - Affected code:
   - New:
-    - `Server/keycloak/realm-tideng.json`
+    - `Server/keycloak/tideng-realm.json`（檔名不可改：Keycloak 的目錄匯入只認 `*-realm.json`，不符合時它會回報「Import finished successfully」而匯入零個 realm）
     - `Server/.env.example`
+    - `Server/verify-image.sh`
     - `App/Packages/SmartAuth/Sources/SmartAuth/JWKS.swift`
     - `App/Packages/SmartAuth/Tests/SmartAuthTests/IDTokenVerificationTests.swift`
   - Modified:
@@ -48,6 +49,7 @@
     - `App/Packages/SmartAuth/Sources/SmartAuth/TokenResponse.swift`
     - `App/Packages/SmartAuth/Sources/SmartAuth/SmartAuthClient.swift`
     - `App/Sources/App/AppConfiguration.swift`
+    - `App/Sources/Pages/ServerSetup/ServerSetupViewModel+Models.swift`（移除 launcher 後，內建的本機 preset 指向一個不存在的服務——這是「`App/` 只有最後一項會動」的例外，移除 launcher 的必然後果）
     - `docs/STATUS.md`
   - Removed:
     - smart-launcher-v2 服務（自 `Server/docker-compose.yml` 移除）

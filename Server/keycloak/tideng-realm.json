@@ -1,0 +1,117 @@
+{
+  "realm": "tideng",
+  "displayName": "Tideng 提燈",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginTheme": "keycloak",
+
+  "clients": [
+    {
+      "clientId": "tideng",
+      "name": "Tideng 提燈",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["tideng://smart/callback"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "tideng://smart/callback"
+      },
+      "protocolMappers": [
+        {
+          "name": "fhir-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "@SMART_AUDIENCE@",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "defaultClientScopes": ["acr", "basic", "profile", "roles", "fhirUser", "user/*.read"],
+      "optionalClientScopes": ["offline_access"]
+    }
+  ],
+
+  "clientScopes": [
+    {
+      "name": "fhirUser",
+      "protocol": "openid-connect",
+      "description": "The FHIR resource this account acts as",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "fhirUser",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "fhirUser",
+            "claim.name": "fhirUser",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "user/*.read",
+      "protocol": "openid-connect",
+      "description": "Read access to everything the user may see",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "username": "ho",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "宗霖",
+      "lastName": "何",
+      "attributes": { "fhirUser": ["Practitioner/practitioner-1"] },
+      "credentials": [{ "type": "password", "value": "tideng", "temporary": false }]
+    },
+    {
+      "username": "chien",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "怡君",
+      "lastName": "簡",
+      "attributes": { "fhirUser": ["Practitioner/practitioner-2"] },
+      "credentials": [{ "type": "password", "value": "tideng", "temporary": false }]
+    },
+    {
+      "username": "chiu",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "承翰",
+      "lastName": "邱",
+      "attributes": { "fhirUser": ["Practitioner/practitioner-3"] },
+      "credentials": [{ "type": "password", "value": "tideng", "temporary": false }]
+    },
+    {
+      "username": "kang",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "雅琳",
+      "lastName": "康",
+      "attributes": { "fhirUser": ["Practitioner/practitioner-4"] },
+      "credentials": [{ "type": "password", "value": "tideng", "temporary": false }]
+    }
+  ]
+}

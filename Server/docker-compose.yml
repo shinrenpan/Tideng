@@ -1,53 +1,89 @@
 # Tideng 本地開發環境
 #
-# Phase B（現在）：smart-launcher-v2 擋在前面模擬 SMART authorize/token/discovery，
-#                  後端接本機的 Siming。
+# 這個 compose 的目標是：`cd Server && docker compose up -d` 就備妥整個世界。
+# 不需要先去別的 repo 起東西——`Server/` 的存在目的就是讓環境跑得起來，
+# 那個目的不該要求你先做別的準備。
 #
-# Siming 不放進這個 compose：那會需要寫死它的 clone 路徑（build: ../../Siming），
-# 而那個假設換一台機器就失效。改為各自獨立啟動，見 README。
+# 位址一律走環境變數。Keycloak 會把 issuer URL 寫進它簽發的每一張 token，
+# 寫死之後換個位址執行，realm 設定與已發出的 token 都會失效。預設值見 .env.example。
 #
-# 切回公開 server 只需把 FHIR_SERVER_R4 改成 https://hapi.fhir.org/baseR4 再重啟。
+# seed 刻意留在 host（`cd seed && swift run SimingSeed`）：它依賴
+# App/Packages/FHIRCore，容器化要塞進整套 Swift toolchain 而換不到任何東西。
+
+name: tideng
 
 services:
-  smart-launcher:
-    image: smartonfhir/smart-launcher-2:latest
-    container_name: tideng-smart-launcher
-    ports:
-      - "8090:80"
+  db:
+    image: postgres:16-alpine
+    container_name: tideng-db
     environment:
-      NODE_ENV: production
-      PORT: 80
-      # 開發用，不是機密。正式部署必須換掉。
-      SECRET: tideng-local-dev-secret
-      # host.docker.internal 是容器連回 host 的位址（macOS／Windows 適用，Linux 需另外設定）
-      FHIR_SERVER_R4: "http://host.docker.internal:8080"
-      # 只留 R4，關掉其他版本避免 launcher UI 出現用不到的選項。
-      FHIR_SERVER_R2: ""
-      FHIR_SERVER_R3: ""
-      # access token 壽命（分鐘）。設短一點，好驗證 refresh 流程。
-      ACCESS_TOKEN_LIFETIME: 5
+      POSTGRES_USER: ${DB_USER:-siming}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-siming}
+      POSTGRES_DB: ${DB_NAME:-siming_demo}
+    ports:
+      # 對外開著是為了讓 host 上的工具（psql、重建資料庫）連得到。
+      - "${DB_PORT:-5433}:5432"
+    healthcheck:
+      # Siming 啟動時會跑 migration，資料庫沒就緒就會失敗。
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-siming} -d ${DB_NAME:-siming_demo}"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
     restart: unless-stopped
 
-# --- Phase B 才啟用 ---
-#
-#  siming:
-#    build: ../../Siming          # 與 Tideng 平行 clone
-#    container_name: tideng-siming
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      DATABASE_URL: postgres://siming:siming@postgres:5432/siming
-#      # Phase A/B 的信任邊界：launcher 在前面時 Siming 的 JWT 驗證關閉
-#      SMART_JWT_VERIFICATION: "false"
-#    depends_on:
-#      - postgres
-#
-#  postgres:
-#    image: postgres:16-alpine
-#    container_name: tideng-postgres
-#    environment:
-#      POSTGRES_USER: siming
-#      POSTGRES_PASSWORD: siming
-#      POSTGRES_DB: siming
-#    volumes:
-#      - ./pgdata:/var/lib/postgresql/data
+  keycloak:
+    # 授權伺服器。它負責帳密登入與簽發 token；Siming 只驗證，不簽發。
+    #
+    # start-dev 用內嵌資料庫，realm 狀態不持久——這是刻意的：
+    # **設定的唯一來源是匯入檔**，而不是有人在管理介面上點出來的狀態。
+    # 從介面改了東西就要回寫檔案，否則下次啟動它就消失了。
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: tideng-keycloak
+    # realm 匯入檔不支援 ${env.X} 替換（實測 Keycloak 26 會把它當成字面值，
+    # 然後以「A redirect URI is not a valid URI」拒絕啟動——所幸是大聲失敗）。
+    # 所以啟動前先自己換。只有 audience 需要換：它必須與 app 送出的 aud 逐字元
+    # 相同，因此跟著主機走；redirect 是 app 的自訂 scheme，與主機無關。
+    # image 的 ENTRYPOINT 是 kc.sh，要一併覆寫才進得了 shell。
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        mkdir -p /opt/keycloak/data/import
+        sed "s|@SMART_AUDIENCE@|$${SMART_AUDIENCE}|g" \
+          /realm-template/tideng-realm.json > /opt/keycloak/data/import/tideng-realm.json
+        exec /opt/keycloak/bin/kc.sh start-dev --import-realm
+    environment:
+      # 開發用帳號，不是機密。正式部署必須換掉。
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      # 這個位址會被寫進每一張 token 的 iss，而且 app 的瀏覽器要連得到它。
+      KC_HOSTNAME: http://${PUBLIC_HOST:-localhost}:${KEYCLOAK_PORT:-8081}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      # 供 realm 匯入檔取用——audience 必須與 app 送出的 aud 逐字元相同。
+      SMART_AUDIENCE: http://${PUBLIC_HOST:-localhost}:${FHIR_PORT:-8080}
+      TIDENG_REDIRECT_URI: ${APP_REDIRECT_URI:-tideng://smart/callback}
+    volumes:
+      - ./keycloak:/realm-template:ro
+    ports:
+      - "${KEYCLOAK_PORT:-8081}:8080"
+    restart: unless-stopped
+
+  siming:
+    # 從平行 clone 建置。路徑可覆寫，因為「與 Tideng 平行」只是慣例不是保證。
+    #
+    # Siming 的 packages/*.tgz 是 gitignored：從乾淨 clone 建置會得到空的 packages
+    # 目錄，而 server 仍會正常啟動、/health 仍回 200，只有 terminology 靜默消失
+    # （CapabilityStatement 從約 76KB 塌成約 11KB）。建完務必跑 verify-image.sh，
+    # 不要只看容器有沒有起來。
+    build:
+      context: ${SIMING_PATH:-../../Siming}
+    container_name: tideng-siming
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-siming}:${DB_PASSWORD:-siming}@db:5432/${DB_NAME:-siming_demo}
+    ports:
+      - "${FHIR_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
