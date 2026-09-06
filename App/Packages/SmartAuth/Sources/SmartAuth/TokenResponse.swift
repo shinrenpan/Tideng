@@ -34,6 +34,9 @@ public struct IDTokenClaims: Sendable, Equatable {
     /// 形如 `Practitioner/123`——所有寫入的 performer 都來自這裡。
     public let fhirUser: String?
     public let subject: String?
+    /// 簽發者。驗簽通過還要比對它——一把有效的金鑰若來自別的 issuer，
+    /// 證明的是別人家的使用者。
+    public let issuer: String?
 
     /// 只解 payload，**不驗簽章**。
     ///
@@ -50,6 +53,7 @@ public struct IDTokenClaims: Sendable, Equatable {
 
         self.fhirUser = json["fhirUser"] as? String
         self.subject = json["sub"] as? String
+        self.issuer = json["iss"] as? String
     }
 
     private static func base64URLDecode(_ value: String) -> Data? {

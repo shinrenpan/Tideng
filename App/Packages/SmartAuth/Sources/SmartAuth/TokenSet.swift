@@ -28,12 +28,16 @@ public struct TokenSet: Codable, Sendable, Equatable {
         self.patient = patient
     }
 
-    public init(response: TokenResponse, now: Date = .now) {
+    /// - Parameter fhirUser: **已經驗過簽章的**身分，沒有就傳 nil。
+    ///
+    ///   刻意由呼叫端傳入而不是自己從 `id_token` 取——自己取等於預設信任，
+    ///   而且沒有任何跡象顯示那個身分沒被驗證過。
+    public init(response: TokenResponse, fhirUser: String?, now: Date = .now) {
         self.accessToken = response.accessToken
         self.refreshToken = response.refreshToken
         self.expiresAt = response.expiresIn.map { now.addingTimeInterval(TimeInterval($0)) }
         self.grantedScopes = response.grantedScopes
-        self.fhirUser = response.idToken.flatMap { IDTokenClaims(unverifiedIDToken: $0)?.fhirUser }
+        self.fhirUser = fhirUser
         self.patient = response.patient
     }
 

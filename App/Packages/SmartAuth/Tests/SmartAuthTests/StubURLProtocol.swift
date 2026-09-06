@@ -12,6 +12,7 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) private static var recorded: [URLRequest] = []
     nonisolated(unsafe) private static var bodies: [Data] = []
     nonisolated(unsafe) private static var delay: TimeInterval = 0
+    nonisolated(unsafe) private static var sequence: [(Int, Data)] = []
 
     /// - Parameter delay: 人為延遲。測併發時需要它把競態窗口撐開，
     ///   否則請求快到彼此不會重疊，測不出序列化有沒有生效。
@@ -20,6 +21,22 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
             Self.status = status
             Self.body = body
             Self.delay = delay
+            Self.sequence = []
+            Self.recorded = []
+            Self.bodies = []
+        }
+    }
+
+    /// 依序回應的佇列。用在「第一個位址失敗、回頭問第二個」這種多段流程——
+    /// 單一 stub 測不到那條路徑，因為每次都回同一個東西。
+    ///
+    /// 佇列用完後沿用最後一組，避免測試要精算請求次數。
+    static func stubSequence(_ responses: [(Int, Data)]) {
+        lock.withLock {
+            Self.sequence = responses
+            Self.status = 200
+            Self.body = Data()
+            Self.delay = 0
             Self.recorded = []
             Self.bodies = []
         }
@@ -62,9 +79,13 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
             return data
         }
 
-        let (status, body, delay) = Self.lock.withLock {
+        let (status, body, delay) = Self.lock.withLock { () -> (Int, Data, TimeInterval) in
             Self.recorded.append(request)
             if let capturedBody { Self.bodies.append(capturedBody) }
+            if !Self.sequence.isEmpty {
+                let next = Self.sequence.count > 1 ? Self.sequence.removeFirst() : Self.sequence[0]
+                return (next.0, next.1, 0)
+            }
             return (Self.status, Self.body, Self.delay)
         }
 

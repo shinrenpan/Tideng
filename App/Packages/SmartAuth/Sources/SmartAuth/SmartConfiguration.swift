@@ -9,12 +9,18 @@ public struct SmartConfiguration: Decodable, Sendable, Equatable {
     public let issuer: String?
     public let authorizationEndpoint: URL
     public let tokenEndpoint: URL
+    /// 驗 `id_token` 簽章要用的公鑰位址。
+    ///
+    /// SMART 規格上是選填，所以是 optional——沒有它就驗不了簽，那時的正確行為是
+    /// 「這個身分不可信、不使用」，而不是把使用者擋在門外。
+    public let jwksURI: URL?
     public let capabilities: [String]
     public let codeChallengeMethodsSupported: [String]
     public let scopesSupported: [String]?
 
     enum CodingKeys: String, CodingKey {
         case issuer
+        case jwksURI = "jwks_uri"
         case authorizationEndpoint = "authorization_endpoint"
         case tokenEndpoint = "token_endpoint"
         case capabilities

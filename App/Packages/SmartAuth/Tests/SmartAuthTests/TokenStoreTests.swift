@@ -186,11 +186,25 @@ extension StubBackedTests {
 
         await store.adopt(response)
         #expect(await store.isSignedIn)
-        #expect(storage.load(profileID: profileID)?.fhirUser == "Practitioner/123")
+        #expect(storage.load(profileID: profileID)?.accessToken == response.accessToken)
 
         await store.signOut()
         #expect(storage.isEmpty)
         #expect(await store.isSignedIn == false)
+    }
+
+    @Test("驗不過的 id_token 不產生身分，但 session 照常成立")
+    func unverifiedIdentityDoesNotEndTheSession() async throws {
+        // fixture 的 id_token 是假簽章，而測試環境沒有可用的 jwks——
+        // 這正是「無法驗證」的情況。session 必須照常，只有身分留白。
+        let (store, storage) = try makeStore(seeded: nil)
+        let response = try JSONDecoder().decode(TokenResponse.self, from: Fixtures.tokenResponse)
+
+        await store.adopt(response)
+
+        #expect(await store.isSignedIn, "驗不過身分不該讓使用者被登出")
+        #expect(try await store.validToken() == response.accessToken)
+        #expect(storage.load(profileID: profileID)?.fhirUser == nil, "未驗證的身分不得被採用")
     }
 
     @Test("重新建立時從儲存回復 session")

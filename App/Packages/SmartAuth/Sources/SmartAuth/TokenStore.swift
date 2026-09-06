@@ -11,6 +11,7 @@ public actor TokenStore: TokenProviding {
     private let clientID: String
     private let profileID: String
     private let storage: any TokenPersisting
+    private let verifier: IDTokenVerifier
 
     private var tokens: TokenSet?
     /// 進行中的 refresh。多個請求同時撞到過期時共享同一個 task，只打一次 token endpoint。
@@ -21,8 +22,10 @@ public actor TokenStore: TokenProviding {
         configuration: SmartConfiguration,
         clientID: String,
         profileID: String,
-        storage: any TokenPersisting
+        storage: any TokenPersisting,
+        verifier: IDTokenVerifier? = nil
     ) {
+        self.verifier = verifier ?? IDTokenVerifier(configuration: configuration)
         self.client = client
         self.configuration = configuration
         self.clientID = clientID
@@ -41,10 +44,19 @@ public actor TokenStore: TokenProviding {
 
     // MARK: - Session 生命週期
 
-    public func adopt(_ response: TokenResponse) {
-        let set = TokenSet(response: response)
+    public func adopt(_ response: TokenResponse) async {
+        let set = TokenSet(response: response, fhirUser: await verifiedFHIRUser(in: response))
         tokens = set
         storage.save(set, profileID: profileID)
+    }
+
+    /// 驗過簽章的 `fhirUser`；驗不過就是 nil。
+    ///
+    /// 驗不過**不會**讓登入失敗——授權由 FHIR server 對 access token 判斷，
+    /// 這裡決定的只是「畫面上那個身分可不可信」。
+    private func verifiedFHIRUser(in response: TokenResponse) async -> String? {
+        guard let idToken = response.idToken else { return nil }
+        return await verifier.verifiedClaims(of: idToken)?.fhirUser
     }
 
     public func signOut() {
@@ -76,13 +88,24 @@ public actor TokenStore: TokenProviding {
             throw SmartAuthError.sessionExpired
         }
 
-        let task = Task<TokenSet, any Error> { [client, configuration, clientID] in
+        // 刷新前已驗過的身分。新回應沒帶 id_token 時沿用它——
+        // 填 nil 會讓側邊欄在每次自動刷新後空掉，那是把安全措施做成 bug。
+        let currentFHIRUser = tokens?.fhirUser
+
+        let task = Task<TokenSet, any Error> { [client, configuration, clientID, verifier] in
             let response = try await client.refresh(
                 refreshToken: refreshToken,
                 configuration: configuration,
                 clientID: clientID
             )
-            return TokenSet(response: response)
+            // 帶了新的 id_token 就重驗一次；驗不過時不採用它，也不丟掉舊的——
+            // 舊的那個是驗過的。
+            var fhirUser = currentFHIRUser
+            if let idToken = response.idToken,
+               let verified = await verifier.verifiedClaims(of: idToken)?.fhirUser {
+                fhirUser = verified
+            }
+            return TokenSet(response: response, fhirUser: fhirUser)
         }
         refreshTask = task
 

@@ -14,7 +14,7 @@
 
 - [x] 3.1 realm 匯入檔定義 public client：PKCE 要求 S256、redirect 為 app 的 callback scheme、不使用 client secret；並定義 SMART 需要的 client scope（`openid`、`fhirUser`、`user/*.read`、`offline_access`）。驗證：走完一次授權碼流程可取得 token，token response 的 scope 涵蓋這四項且有發出 refresh token；不帶 code_verifier 時被拒絕
 - [x] 3.2 落實決策「`aud` 三處使用同一份不帶尾斜線的字面值」：Keycloak 的 audience mapper、app 送出的 `aud` 參數、Siming 的 `SMART_AUDIENCE` 由同一個環境變數供給。驗證：**先斷言 `SMART_AUDIENCE` 非空**，再確認正常登入的 token 可取得資料、且以刻意錯誤 audience（多一個尾斜線）簽發的 token 得到 401。順序不可顛倒——`SMART_AUDIENCE` 未設定（**或為空字串，compose 未設變數的渲染結果**）時 Siming 完全不檢查 aud，那條「應該 401」的斷言會假性通過，防呆本身被同一類沉默失敗吃掉。Siming 端已擋掉空字串，但那層擋得住「忘了設」、擋不住「設了但打錯字」，所以本條的非空斷言仍然必要。落實決策「驗收要有牙齒：以變異確認」——清空 `SMART_AUDIENCE` 跑一次，這條驗收必須變紅；若沒有變紅，代表「先斷言非空」那層擋法本身也是必然為真
-- [ ] 3.3 匯入檔為 seed 的四位醫事人員建立帳號，帳號屬性存放其 practitioner id，protocol mapper 將該屬性輸出為 `fhirUser`，值的形式為 `Practitioner/<id>`。滿足 Requirement: Accounts are bound to practitioners in the clinical data。驗證：兩個不同角色的帳號分別登入，各自解析到自己的 practitioner，側邊欄顯示的職位不同
+- [x] 3.3 匯入檔為 seed 的四位醫事人員建立帳號，帳號屬性存放其 practitioner id，protocol mapper 將該屬性輸出為 `fhirUser`，值的形式為 `Practitioner/<id>`。滿足 Requirement: Accounts are bound to practitioners in the clinical data。驗證：兩個不同角色的帳號分別登入，各自解析到自己的 practitioner，側邊欄顯示的職位不同
 - [x] 3.4 登入需要帳密，且錯誤的密碼不發出 authorization code。滿足 Requirement: The environment authenticates people, it does not simulate it。驗證：以存在的帳號搭配錯誤密碼提交，停留在登入頁且回呼網址未帶 code
 
 ## 4. FHIR server 真正拒絕
@@ -29,7 +29,7 @@
 
 ## 6. 身分宣告的驗證
 
-- [ ] 6.1 落實決策「id_token 驗簽失敗只讓身分消失，不中斷 session」：以 discovery 提供的 jwks 位址取得公鑰並快取，簽章與 issuer 皆通過時才取出 `fhirUser`；驗簽失敗、issuer 不符、jwks 取得失敗三者皆不產生身分且不結束 session。滿足 Requirement: The identity claim is verified before it is trusted。驗證：SmartAuthTests 以 stub 提供 jwks，涵蓋簽章正確、簽章錯誤、issuer 不符、缺少 id_token 四種情況，斷言身分有無與 session 是否存續，並斷言公鑰取得後重複驗證不再重新請求
+- [x] 6.1 落實決策「id_token 驗簽失敗只讓身分消失，不中斷 session」：以 discovery 提供的 jwks 位址取得公鑰並快取，簽章與 issuer 皆通過時才取出 `fhirUser`；驗簽失敗、issuer 不符、jwks 取得失敗三者皆不產生身分且不結束 session。滿足 Requirement: The identity claim is verified before it is trusted。驗證：SmartAuthTests 以 stub 提供 jwks，涵蓋簽章正確、簽章錯誤、issuer 不符、缺少 id_token 四種情況，斷言身分有無與 session 是否存續，並斷言公鑰取得後重複驗證不再重新請求
 - [ ] 6.2 401 的處理維持既有形狀並在真實驗證器上成立：持有 refresh token 時刷新一次並重試，refresh 被拒或沒有 refresh token 時回到登入頁。滿足 Requirement: Rejection by the resource server is handled as rejection。驗證：模擬器上以 Keycloak 縮短的 token 壽命實測——擱置至過期後下拉刷新仍取得資料；再以撤銷 session 使 refresh 失敗，確認回到登入頁
 
 ## 7. 文件與整體驗證
