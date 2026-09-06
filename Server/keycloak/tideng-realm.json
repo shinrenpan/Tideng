@@ -5,7 +5,6 @@
   "sslRequired": "none",
   "registrationAllowed": false,
   "loginTheme": "keycloak",
-
   "clients": [
     {
       "clientId": "tideng",
@@ -17,7 +16,9 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["tideng://smart/callback"],
+      "redirectUris": [
+        "tideng://smart/callback"
+      ],
       "webOrigins": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
@@ -35,11 +36,15 @@
           }
         }
       ],
-      "defaultClientScopes": ["acr", "basic", "profile", "roles", "fhirUser", "user/*.read"],
-      "optionalClientScopes": ["offline_access"]
+      "defaultClientScopes": [
+        "fhirUser",
+        "user/*.read"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ]
     }
   ],
-
   "clientScopes": [
     {
       "name": "fhirUser",
@@ -75,7 +80,6 @@
       }
     }
   ],
-
   "users": [
     {
       "username": "ho",
@@ -83,8 +87,22 @@
       "emailVerified": true,
       "firstName": "宗霖",
       "lastName": "何",
-      "attributes": { "fhirUser": ["Practitioner/practitioner-1"] },
-      "credentials": [{ "type": "password", "value": "tideng", "temporary": false }]
+      "attributes": {
+        "fhirUser": [
+          "Practitioner/practitioner-1"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "tideng",
+          "temporary": false
+        }
+      ],
+      "email": "ho@clinic.example",
+      "realmRoles": [
+        "offline_access"
+      ]
     },
     {
       "username": "chien",
@@ -92,8 +110,22 @@
       "emailVerified": true,
       "firstName": "怡君",
       "lastName": "簡",
-      "attributes": { "fhirUser": ["Practitioner/practitioner-2"] },
-      "credentials": [{ "type": "password", "value": "tideng", "temporary": false }]
+      "attributes": {
+        "fhirUser": [
+          "Practitioner/practitioner-2"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "tideng",
+          "temporary": false
+        }
+      ],
+      "email": "chien@clinic.example",
+      "realmRoles": [
+        "offline_access"
+      ]
     },
     {
       "username": "chiu",
@@ -101,8 +133,22 @@
       "emailVerified": true,
       "firstName": "承翰",
       "lastName": "邱",
-      "attributes": { "fhirUser": ["Practitioner/practitioner-3"] },
-      "credentials": [{ "type": "password", "value": "tideng", "temporary": false }]
+      "attributes": {
+        "fhirUser": [
+          "Practitioner/practitioner-3"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "tideng",
+          "temporary": false
+        }
+      ],
+      "email": "chiu@clinic.example",
+      "realmRoles": [
+        "offline_access"
+      ]
     },
     {
       "username": "kang",
@@ -110,8 +156,22 @@
       "emailVerified": true,
       "firstName": "雅琳",
       "lastName": "康",
-      "attributes": { "fhirUser": ["Practitioner/practitioner-4"] },
-      "credentials": [{ "type": "password", "value": "tideng", "temporary": false }]
+      "attributes": {
+        "fhirUser": [
+          "Practitioner/practitioner-4"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "tideng",
+          "temporary": false
+        }
+      ],
+      "email": "kang@clinic.example",
+      "realmRoles": [
+        "offline_access"
+      ]
     }
   ]
 }

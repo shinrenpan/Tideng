@@ -67,6 +67,15 @@ services:
       - ./keycloak:/realm-template:ro
     ports:
       - "${KEYCLOAK_PORT:-8081}:8080"
+    healthcheck:
+      # image 裡沒有 curl，用 bash 的 /dev/tcp 確認連接埠通了。
+      # 這只保證「埠開了」，不保證 realm 已匯入——Siming 在 realm 還沒好時抓不到
+      # jwks 會啟動失敗，交給它的 restart 政策重試。那個過程是看得見的
+      # （容器不斷重啟 + log 有原因），不是靜默降級。
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
     restart: unless-stopped
 
   siming:
@@ -81,9 +90,29 @@ services:
     container_name: tideng-siming
     environment:
       DATABASE_URL: postgres://${DB_USER:-siming}:${DB_PASSWORD:-siming}@db:5432/${DB_NAME:-siming_demo}
+
+      # ── SMART：Siming 是 resource server，只驗證不簽發 ──────────────────
+      #
+      # issuer 與 jwks 位址刻意分開，因為它們的觀察者不同：
+      #   issuer 是**寫在 token 裡的字串**，也是 app 的瀏覽器要連的位址 → 對外主機名
+      #   jwks   是**Siming 自己要去抓金鑰**的位址 → 容器網路內的 DNS
+      # 混用會壞：容器裡的 localhost 是它自己，不是 Keycloak。
+      SMART_ISSUER: http://${PUBLIC_HOST:-localhost}:${KEYCLOAK_PORT:-8081}/realms/tideng
+      SMART_JWKS_URL: http://keycloak:8080/realms/tideng/protocol/openid-connect/certs
+
+      # 必須與 app 送出的 aud、以及 Keycloak 的 audience mapper 逐字元相同。
+      # 比對是完全字串相等，多一個尾斜線就是「登入成功但每個請求都 401」。
+      SMART_AUDIENCE: http://${PUBLIC_HOST:-localhost}:${FHIR_PORT:-8080}
+
+      # 發布在 .well-known/smart-configuration 供 app 的 discovery 讀取。
+      # 兩者必須同時提供，只設一個 Siming 會啟動失敗——半套的宣告比不宣告危險。
+      SMART_AUTHORIZE_URL: http://${PUBLIC_HOST:-localhost}:${KEYCLOAK_PORT:-8081}/realms/tideng/protocol/openid-connect/auth
+      SMART_TOKEN_URL: http://${PUBLIC_HOST:-localhost}:${KEYCLOAK_PORT:-8081}/realms/tideng/protocol/openid-connect/token
     ports:
       - "${FHIR_PORT:-8080}:8080"
     depends_on:
       db:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     restart: unless-stopped

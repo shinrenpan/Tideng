@@ -12,15 +12,15 @@
 
 ## 3. Keycloak 的 realm 定義
 
-- [ ] 3.1 realm 匯入檔定義 public client：PKCE 要求 S256、redirect 為 app 的 callback scheme、不使用 client secret；並定義 SMART 需要的 client scope（`openid`、`fhirUser`、`user/*.read`、`offline_access`）。驗證：走完一次授權碼流程可取得 token，token response 的 scope 涵蓋這四項且有發出 refresh token；不帶 code_verifier 時被拒絕
-- [ ] 3.2 落實決策「`aud` 三處使用同一份不帶尾斜線的字面值」：Keycloak 的 audience mapper、app 送出的 `aud` 參數、Siming 的 `SMART_AUDIENCE` 由同一個環境變數供給。驗證：**先斷言 `SMART_AUDIENCE` 非空**，再確認正常登入的 token 可取得資料、且以刻意錯誤 audience（多一個尾斜線）簽發的 token 得到 401。順序不可顛倒——`SMART_AUDIENCE` 未設定（**或為空字串，compose 未設變數的渲染結果**）時 Siming 完全不檢查 aud，那條「應該 401」的斷言會假性通過，防呆本身被同一類沉默失敗吃掉。Siming 端已擋掉空字串，但那層擋得住「忘了設」、擋不住「設了但打錯字」，所以本條的非空斷言仍然必要。落實決策「驗收要有牙齒：以變異確認」——清空 `SMART_AUDIENCE` 跑一次，這條驗收必須變紅；若沒有變紅，代表「先斷言非空」那層擋法本身也是必然為真
+- [x] 3.1 realm 匯入檔定義 public client：PKCE 要求 S256、redirect 為 app 的 callback scheme、不使用 client secret；並定義 SMART 需要的 client scope（`openid`、`fhirUser`、`user/*.read`、`offline_access`）。驗證：走完一次授權碼流程可取得 token，token response 的 scope 涵蓋這四項且有發出 refresh token；不帶 code_verifier 時被拒絕
+- [x] 3.2 落實決策「`aud` 三處使用同一份不帶尾斜線的字面值」：Keycloak 的 audience mapper、app 送出的 `aud` 參數、Siming 的 `SMART_AUDIENCE` 由同一個環境變數供給。驗證：**先斷言 `SMART_AUDIENCE` 非空**，再確認正常登入的 token 可取得資料、且以刻意錯誤 audience（多一個尾斜線）簽發的 token 得到 401。順序不可顛倒——`SMART_AUDIENCE` 未設定（**或為空字串，compose 未設變數的渲染結果**）時 Siming 完全不檢查 aud，那條「應該 401」的斷言會假性通過，防呆本身被同一類沉默失敗吃掉。Siming 端已擋掉空字串，但那層擋得住「忘了設」、擋不住「設了但打錯字」，所以本條的非空斷言仍然必要。落實決策「驗收要有牙齒：以變異確認」——清空 `SMART_AUDIENCE` 跑一次，這條驗收必須變紅；若沒有變紅，代表「先斷言非空」那層擋法本身也是必然為真
 - [ ] 3.3 匯入檔為 seed 的四位醫事人員建立帳號，帳號屬性存放其 practitioner id，protocol mapper 將該屬性輸出為 `fhirUser`，值的形式為 `Practitioner/<id>`。滿足 Requirement: Accounts are bound to practitioners in the clinical data。驗證：兩個不同角色的帳號分別登入，各自解析到自己的 practitioner，側邊欄顯示的職位不同
-- [ ] 3.4 登入需要帳密，且錯誤的密碼不發出 authorization code。滿足 Requirement: The environment authenticates people, it does not simulate it。驗證：以存在的帳號搭配錯誤密碼提交，停留在登入頁且回呼網址未帶 code
+- [x] 3.4 登入需要帳密，且錯誤的密碼不發出 authorization code。滿足 Requirement: The environment authenticates people, it does not simulate it。驗證：以存在的帳號搭配錯誤密碼提交，停留在登入頁且回呼網址未帶 code
 
 ## 4. FHIR server 真正拒絕
 
-- [ ] 4.1 Siming 啟用 `SMART_ISSUER` 指向 Keycloak 並以其 jwks 驗證 bearer token；`SMART_ISSUER` 已設定但取不到 jwks 時失敗可見，不得沉默退回不驗證。滿足 Requirement: The FHIR server rejects requests it cannot verify。驗證：不帶 Authorization header、以其他金鑰簽出的 token、issuer 不符的 token，三者皆得 401，正常 token 可取得資料；另以無法連線的 jwks 位址啟動，確認該情況可辨識且此時不會有請求被放行
-- [ ] 4.2 確認 Siming 發布的 discovery 文件符合本案的合約，涵蓋決策「Siming 的授權端點以環境變數提供，不去抓 Keycloak 的 openid-configuration」與「授權端點欄位只在完整設定時才發布」。驗證：設定完整時文件含 `authorization_endpoint`、`token_endpoint`、`code_challenge_methods_supported`、`grant_types_supported`、`token_endpoint_auth_methods_supported`，且 `capabilities` 為五項（`permission-v1`、`permission-patient`、`launch-standalone`、`client-public`、`context-standalone-patient`）；兩個端點皆未設定時上述欄位皆不出現、`capabilities` 只剩前兩項。落實決策「驗收要有牙齒：以變異確認」——**兩種變異都要跑**：(a) 從 compose 拿掉 `SMART_AUTHORIZE_URL` 整行，(b) 把它的值改成空字串 `""`。兩者 Siming 都必須啟動失敗。(b) 是容器化才會大量出現的形狀——compose／k8s 把未設變數渲染成空字串而不是 unset，而只檢查 nil 的守則擋不住它
+- [x] 4.1 Siming 啟用 `SMART_ISSUER` 指向 Keycloak 並以其 jwks 驗證 bearer token；`SMART_ISSUER` 已設定但取不到 jwks 時失敗可見，不得沉默退回不驗證。滿足 Requirement: The FHIR server rejects requests it cannot verify。驗證：不帶 Authorization header、以其他金鑰簽出的 token、issuer 不符的 token，三者皆得 401，正常 token 可取得資料；另以無法連線的 jwks 位址啟動，確認該情況可辨識且此時不會有請求被放行
+- [x] 4.2 確認 Siming 發布的 discovery 文件符合本案的合約，涵蓋決策「Siming 的授權端點以環境變數提供，不去抓 Keycloak 的 openid-configuration」與「授權端點欄位只在完整設定時才發布」。驗證：設定完整時文件含 `authorization_endpoint`、`token_endpoint`、`code_challenge_methods_supported`、`grant_types_supported`、`token_endpoint_auth_methods_supported`，且 `capabilities` 為五項（`permission-v1`、`permission-patient`、`launch-standalone`、`client-public`、`context-standalone-patient`）；兩個端點皆未設定時上述欄位皆不出現、`capabilities` 只剩前兩項。落實決策「驗收要有牙齒：以變異確認」——**兩種變異都要跑**：(a) 從 compose 拿掉 `SMART_AUTHORIZE_URL` 整行，(b) 把它的值改成空字串 `""`。兩者 Siming 都必須啟動失敗。(b) 是容器化才會大量出現的形狀——compose／k8s 把未設變數渲染成空字串而不是 unset，而只檢查 nil 的守則擋不住它
 
 ## 5. 客戶端對伺服器的要求
 
