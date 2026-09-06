@@ -15,8 +15,7 @@ App/
     Shared/         Business-agnostic infrastructure only
   Resources/        Localizable.xcstrings, assets
   Packages/         FHIRCore, FHIRClient, SmartAuth (local SPM)
-Server/             docker-compose for smart-launcher-v2 (dev auth server)
-docs/               Product and technical specs
+Server/             docker-compose for the local FHIR server + Keycloak
 ```
 
 ## Commands

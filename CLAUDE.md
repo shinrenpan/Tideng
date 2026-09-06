@@ -34,7 +34,6 @@ Changes can be parked（暫存）— temporarily moved out of `openspec/changes/
 ```
 App/       iPad app — implementation constraints live in App/CLAUDE.md, read it first
 Server/    docker-compose for the local SMART launcher (dev auth server)
-docs/      Product spec, tech spec, and STATUS.md (what is actually built)
 openspec/  Spectra specs and change proposals
 ```
 
@@ -42,7 +41,5 @@ openspec/  Spectra specs and change proposals
 repeatedly (the `FHIR.` namespace, Swift Testing's `.serialized` scope, the launcher's `sim`
 path segment, the localization workflow).
 
-`docs/STATUS.md` is the current state: what is built, what is deliberately not, and the
-answers to the original spec's open questions. The two specs in `docs/` describe the full
-nursing information system — that remains the v1.0 target, but the shipped scope is much
-narrower. Trust STATUS.md when they disagree.
+`openspec/specs/` is what the app actually does — one spec per capability, kept in sync by
+`spectra archive`. Read it rather than inferring intent from the code.

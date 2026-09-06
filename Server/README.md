@@ -225,7 +225,7 @@ client 要先讀得到它們才知道去哪裡登入）。
 
 ## Siming 的能力缺口
 
-實測結果記在 [`../docs/STATUS.md`](../docs/STATUS.md)。動工前值得知道的：
+動工前值得知道的：
 
 - **只支援 `transaction`，沒有 `batch`** — 唯讀期無影響，但牴觸 tech spec 的離線同步設計
 - **`_summary=count` 與一般查詢走不同 SQL** — 同一個 query string，帶不帶 `_summary=count`

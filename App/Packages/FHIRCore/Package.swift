@@ -8,7 +8,7 @@ let package = Package(
         .library(name: "FHIRCore", targets: ["FHIRCore"])
     ],
     dependencies: [
-        // 與 Siming 鎖同一版本。升版時兩邊必須同步，見 docs/NIS-TECH-SPEC.md §2。
+        // 與 Siming 鎖同一版本。兩邊的 wire format 必須一致，升版時要一起動。
         .package(url: "https://github.com/apple/FHIRModels.git", exact: "0.9.3")
     ],
     targets: [

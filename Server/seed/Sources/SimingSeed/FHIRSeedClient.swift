@@ -8,7 +8,7 @@ import ModelsR4
 /// 對 FHIR server 灌資料的最小 client。
 ///
 /// 每次送出都帶 `If-None-Exist`：0 match → 201 建立、1 match → 200 回既有。
-/// 這讓腳本可以重跑而不產生重複，也是 `NIS-TECH-SPEC.md` §0 冪等性判斷的第一次真實驗證。
+/// 這讓腳本可以重跑而不產生重複。
 struct FHIRSeedClient {
 
     enum Outcome {
