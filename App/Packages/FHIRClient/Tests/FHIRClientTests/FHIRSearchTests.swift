@@ -87,6 +87,42 @@ struct FHIRSearchTests {
         #expect(query(search)["date"] == "ge2026-09-01T12:00:00Z")
     }
 
+    // MARK: - 終點頁查詢
+
+    // 三頁共用同一種形狀：以 patient 為條件取一類資源。排序一律在 client 端做，
+    // 所以這裡刻意**不**送 `_sort`——server 的 `_sort` 只認五個欄位，未知欄位靜默丟棄。
+
+    @Test("病歷頁以 _id 取這一位病人")
+    func patientByID() {
+        let search = FHIRSearch.patient(id: "patient-7")
+
+        #expect(search.resourceType == "Patient")
+        #expect(query(search)["_id"] == "patient-7")
+    }
+
+    @Test("就診頁以 patient 取就診，並帶回參與者")
+    func encountersForPatient() {
+        let search = FHIRSearch.encounters(patientID: "patient-7")
+
+        #expect(search.resourceType == "Encounter")
+        let parameters = query(search)
+        #expect(parameters["patient"] == "patient-7")
+        // participant 解析不到時降級成顯示 reference，所以 _include 是最佳化不是前提。
+        #expect(parameters["_include"] == "Encounter:participant")
+        #expect(parameters["_sort"] == nil)
+    }
+
+    @Test("用藥頁以 patient 取處方，並帶回開立者")
+    func medicationRequestsForPatient() {
+        let search = FHIRSearch.medicationRequests(patientID: "patient-7")
+
+        #expect(search.resourceType == "MedicationRequest")
+        let parameters = query(search)
+        #expect(parameters["patient"] == "patient-7")
+        #expect(parameters["_include"] == "MedicationRequest:requester")
+        #expect(parameters["_sort"] == nil)
+    }
+
     // MARK: - 既有查詢不受影響
 
     @Test("病人清單查詢維持原樣")

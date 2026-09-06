@@ -168,4 +168,91 @@ enum SeedData {
     /// 這種病人在診所裡本來就存在，而且他讓「單一觀測值也要畫得出來」
     /// 不必靠 Preview 才驗得到——在真實資料上就看得見。
     static let firstVisitSequences = Set([20])
+
+    // MARK: - 處方
+
+    /// 一次的量。與觀測值一樣走 UCUM——`{tablet}` 這類註記單位是 UCUM 的合法寫法。
+    struct Dose {
+        let value: Double
+        let unit: String
+        let code: String
+    }
+
+    /// 一段給藥指示，對應 FHIR 的一筆 `dosageInstruction`。
+    struct DosageStep {
+        let dose: Dose
+        /// 一個週期內給幾次。
+        let frequency: Int
+        /// 週期長度與單位（FHIR 的 `period` / `periodUnit`）。
+        let period: Double
+        let periodUnit: String
+        /// 明確的給藥時間。
+        ///
+        /// **空陣列不是「沒有時程」，而是「記錄沒有指定是哪幾點」**——那幾點由機構的
+        /// 給藥常規決定，不在 FHIR 資料裡。這個區別正是用藥頁要展示的東西，所以
+        /// seed 必須同時提供空的與非空的，否則畫面上分不出實作有沒有搞混。
+        let timesOfDay: [(hour: UInt8, minute: UInt8)]
+        /// 這一段持續幾天；`nil` 表示記錄未指定期程。
+        let days: Int?
+    }
+
+    /// 處方的時程形態。四種都刻意選過——簡單的形態證明不了什麼。
+    enum DosageShape {
+        /// 固定次數但未指定時間。臨床上最常見，也最容易被實作自行填上時間。
+        case unspecifiedTimes(DosageStep)
+        /// 需要時服用：**沒有時程可言**，不是「時程未知」。
+        case asNeeded(reason: String, dose: Dose)
+        /// 劑量隨時間遞減，一張處方多段指示，靠 `sequence` 表達順序。
+        case tapering([DosageStep])
+        /// 記錄有指定時間——對照組，讓「未指定」在同一份資料裡看得出是刻意的。
+        case explicitTimes(DosageStep)
+    }
+
+    struct MedicationSpec {
+        let name: String
+        let shape: DosageShape
+    }
+
+    private static let tablet = Dose(value: 1, unit: "錠", code: "{tablet}")
+    private static let capsule = Dose(value: 1, unit: "膠囊", code: "{capsule}")
+
+    private static func daily(
+        _ dose: Dose, times frequency: Int,
+        at timesOfDay: [(hour: UInt8, minute: UInt8)] = [], days: Int? = nil
+    ) -> DosageStep {
+        .init(dose: dose, frequency: frequency, period: 1, periodUnit: "d",
+              timesOfDay: timesOfDay, days: days)
+    }
+
+    /// 10 張處方，四種時程形態都到齊。
+    ///
+    /// Prednisolone 是唯一會遞減的一張——類固醇短期療程本來就這樣開。把遞減硬套在
+    /// 降血壓或降血糖藥上，資料一眼就假，而這個 repo 的資料必須經得起看。
+    static let medications: [MedicationSpec] = [
+        .init(name: "Amoxicillin 500mg 膠囊",
+              shape: .unspecifiedTimes(daily(capsule, times: 3, days: 7))),
+        .init(name: "Metformin 500mg 錠",
+              shape: .explicitTimes(daily(tablet, times: 2, at: [(8, 0), (18, 0)]))),
+        .init(name: "Amlodipine 5mg 錠",
+              shape: .unspecifiedTimes(daily(tablet, times: 1))),
+        .init(name: "Prednisolone 5mg 錠",
+              shape: .tapering([
+                  daily(Dose(value: 4, unit: "錠", code: "{tablet}"), times: 1, days: 3),
+                  daily(Dose(value: 2, unit: "錠", code: "{tablet}"), times: 1, days: 3),
+                  daily(tablet, times: 1, days: 3)
+              ])),
+        .init(name: "Losartan 50mg 錠",
+              shape: .unspecifiedTimes(daily(tablet, times: 1))),
+        .init(name: "Acetaminophen 500mg 錠",
+              shape: .asNeeded(reason: "發燒或疼痛", dose: tablet)),
+        .init(name: "Omeprazole 20mg 膠囊",
+              shape: .unspecifiedTimes(daily(capsule, times: 1))),
+        .init(name: "Aspirin 100mg 錠",
+              shape: .unspecifiedTimes(daily(tablet, times: 1))),
+        .init(name: "Levothyroxine 50mcg 錠",
+              shape: .explicitTimes(daily(tablet, times: 1, at: [(7, 0)]))),
+        .init(name: "Salbutamol 吸入劑",
+              shape: .asNeeded(reason: "喘鳴發作",
+                               dose: Dose(value: 2, unit: "吸", code: "{puff}")))
+    ]
 }

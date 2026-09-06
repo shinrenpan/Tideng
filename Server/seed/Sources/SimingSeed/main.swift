@@ -234,16 +234,9 @@ for spec in SeedData.patients {
 
 // MARK: - MedicationRequest（用藥中）
 
-let medications = [
-    "Amoxicillin 500mg 膠囊", "Metformin 500mg 錠", "Amlodipine 5mg 錠",
-    "Atorvastatin 10mg 錠", "Losartan 50mg 錠", "Acetaminophen 500mg 錠",
-    "Omeprazole 20mg 膠囊", "Aspirin 100mg 錠", "Levothyroxine 50mcg 錠",
-    "Salbutamol 吸入劑"
-]
-
 var medicationTally = SeedTally()
 
-for (index, medication) in medications.enumerated() {
+for (index, medication) in SeedData.medications.enumerated() {
     let seq = index + 1
     guard let patientID = patientIDs[seq] else { continue }
     // requester 只能是有處方權的人，不能沿用 Encounter 那條「所有人輪流」的路徑

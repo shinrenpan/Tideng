@@ -60,6 +60,22 @@ extension PatientListViewModel {
     }
   }
 
+  /// 選一列之後開啟的終點頁。
+  ///
+  /// **由抵達的切片決定，不是由病人決定**——同一位病人從不同卡片點進去會看到不同的
+  /// 畫面。切片就是使用者的提問：從「用藥中」進來的人問的是藥，從「超出參考值」
+  /// 進來的人問的是數值。永遠給同一頁等於把那個提問丟掉。
+  enum Destination: Equatable, Sendable {
+    /// 病歷（`Patient`）。
+    case record
+    /// 就診狀態（`Encounter`）。
+    case encounters
+    /// 用藥（`MedicationRequest`）。
+    case medications
+    /// 數值趨勢（`Observation`）。
+    case vitals
+  }
+
   /// `Hashable` 是 SwiftUI 導航的要求（`navigationDestination(item:)` 需要它來
   /// 判斷推進目標是否改變），不是 Domain Model 本身的需要。
   struct Patient: Identifiable, Equatable, Hashable, Sendable {
@@ -149,6 +165,19 @@ extension PatientListViewModel.PatientGender {
 // MARK: - 切片 → 查詢與取值
 
 extension PatientListViewModel.Slice {
+
+  /// 這份清單的列該開往哪一個終點頁。
+  ///
+  /// `Slice(identifier:)` 已經把對不上的識別碼收斂成 `.all`，所以未知切片會落在
+  /// 病歷頁——Patient 是四者中對任何病人都成立的那一個，不會是崩潰或空白。
+  var destination: PatientListViewModel.Destination {
+    switch self {
+    case .all: .record
+    case .seenToday: .encounters
+    case .onMedication: .medications
+    case .outOfRange: .vitals
+    }
+  }
 
   /// 與主畫面同一套理由：只有「超出參考值」需要多頁取樣。
   var maxPages: Int {

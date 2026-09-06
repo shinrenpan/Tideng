@@ -374,3 +374,85 @@ struct PatientListPresentationTests {
     #expect(try patient(#"{"resourceType":"Patient","id":"p4"}"#).gender == .unknown)
   }
 }
+
+// MARK: - 終點頁分流
+
+@MainActor
+struct PatientListDestinationTests {
+
+  private let patient = PatientListViewModel.Patient(
+    id: "p1", name: "王志明", gender: .male,
+    birthDate: DateComponents(year: 1958, month: 3, day: 12), recordNumber: "A0000001"
+  )
+
+  private func makeViewModel(slice: String) throws -> PatientListViewModel {
+    PatientListViewModel(client: try TestSupport.makeClient(), sliceIdentifier: slice)
+  }
+
+  @Test
+  func `四個切片各自導向不同的終點頁`() throws {
+    // 這是本案的核心決策：終點由抵達的切片決定，不是由病人決定。
+    // 四個切片若有任兩個落在同一頁，「四張卡片各自走到不同終點」就沒有成立。
+    let expected: [PatientListViewModel.Slice: PatientListViewModel.Destination] = [
+      .all: .record,
+      .seenToday: .encounters,
+      .onMedication: .medications,
+      .outOfRange: .vitals
+    ]
+
+    for (slice, destination) in expected {
+      let viewModel = try makeViewModel(slice: slice.rawValue)
+      #expect(viewModel.state.slice.destination == destination, "\(slice.rawValue) 走錯終點")
+    }
+
+    // 每個切片都被涵蓋，而且沒有兩個落在同一頁——否則「四張卡片各自走到不同終點」
+    // 只是看起來成立。
+    #expect(Set(expected.keys) == Set(PatientListViewModel.Slice.allCases))
+    #expect(Set(expected.values).count == PatientListViewModel.Slice.allCases.count)
+  }
+
+  @Test
+  func `未知的切片識別碼導向病歷頁`() throws {
+    // Patient 是四者中對任何病人都成立的那一個。不是崩潰，也不是空白畫面。
+    let viewModel = try makeViewModel(slice: "no-such-slice")
+
+    #expect(viewModel.state.slice == .all)
+    #expect(viewModel.state.slice.destination == .record)
+  }
+
+  @Test
+  func `終點頁只收到 primitive`() throws {
+    // 跨 feature 邊界不傳 Domain Model：三個終點頁都不認識 PatientListViewModel.Patient。
+    // 這裡直接斷言它們收到的身分資料只由 primitive 組成。
+    let viewModel = try makeViewModel(slice: PatientListViewModel.Slice.all.rawValue)
+
+    let record = viewModel.recordViewModel(for: patient).state.patient
+    #expect(record == .init(id: "p1", name: "王志明"))
+
+    let encounters = viewModel.encountersViewModel(for: patient).state.patient
+    #expect(encounters == .init(id: "p1", name: "王志明"))
+
+    let medications = viewModel.medicationsViewModel(for: patient).state.patient
+    #expect(medications == .init(id: "p1", name: "王志明"))
+
+    let vitals = viewModel.detailViewModel(for: patient).state.patient
+    #expect(vitals.id == "p1")
+    #expect(vitals.name == "王志明")
+
+    for identity in [Mirror(reflecting: record), Mirror(reflecting: encounters), Mirror(reflecting: medications)] {
+      for child in identity.children {
+        #expect(child.value is String, "身分資料只能由 primitive 組成，卻出現 \(type(of: child.value))")
+      }
+    }
+  }
+
+  @Test
+  func `同一位病人重複開啟拿到同一個 ViewModel`() throws {
+    // 每次 body 重算就新建一個的話，已載入的資料與捲動位置都會丟失。
+    let viewModel = try makeViewModel(slice: PatientListViewModel.Slice.onMedication.rawValue)
+
+    #expect(viewModel.medicationsViewModel(for: patient) === viewModel.medicationsViewModel(for: patient))
+    #expect(viewModel.recordViewModel(for: patient) === viewModel.recordViewModel(for: patient))
+    #expect(viewModel.encountersViewModel(for: patient) === viewModel.encountersViewModel(for: patient))
+  }
+}

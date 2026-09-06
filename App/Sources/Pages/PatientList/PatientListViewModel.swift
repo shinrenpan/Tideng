@@ -11,11 +11,19 @@ final class PatientListViewModel {
   @ObservationIgnored
   private let client: FHIRClient
 
-  /// 已開啟過的病人詳情，依 id 快取。
+  /// 已開啟過的終點頁，依病人 id 快取。
   ///
   /// 病人數量不定，無法像主畫面那樣由 HostController 預先建好全部；而每次 body 重算
-  /// 就新建一個的話，捲動位置與已載入的觀測值都會丟失。
+  /// 就新建一個的話，捲動位置與已載入的資料都會丟失。
   /// 這不是業務邏輯，是子 feature 的組裝——所以不走 `doAction`。
+  ///
+  /// 一份清單只通往一種終點（終點由切片決定），所以四份快取裡實際只會用到一份。
+  @ObservationIgnored
+  private var recordViewModels: [String: PatientRecordViewModel] = [:]
+  @ObservationIgnored
+  private var encounterViewModels: [String: PatientEncountersViewModel] = [:]
+  @ObservationIgnored
+  private var medicationViewModels: [String: PatientMedicationsViewModel] = [:]
   @ObservationIgnored
   private var detailViewModels: [String: PatientDetailViewModel] = [:]
 
@@ -25,7 +33,42 @@ final class PatientListViewModel {
     self.state.slice = .init(identifier: sliceIdentifier)
   }
 
-  /// 取得（必要時建立）該病人詳情的 ViewModel。
+  /// 取得（必要時建立）該病人病歷頁的 ViewModel。
+  ///
+  /// 跨 feature 邊界只傳 primitive——終點頁不認識這裡的 `Patient` 型別。
+  func recordViewModel(for patient: Patient) -> PatientRecordViewModel {
+    if let existing = recordViewModels[patient.id] { return existing }
+    let viewModel = PatientRecordViewModel(
+      client: client,
+      patient: .init(id: patient.id, name: patient.name)
+    )
+    recordViewModels[patient.id] = viewModel
+    return viewModel
+  }
+
+  /// 取得（必要時建立）該病人就診頁的 ViewModel。
+  func encountersViewModel(for patient: Patient) -> PatientEncountersViewModel {
+    if let existing = encounterViewModels[patient.id] { return existing }
+    let viewModel = PatientEncountersViewModel(
+      client: client,
+      patient: .init(id: patient.id, name: patient.name)
+    )
+    encounterViewModels[patient.id] = viewModel
+    return viewModel
+  }
+
+  /// 取得（必要時建立）該病人用藥頁的 ViewModel。
+  func medicationsViewModel(for patient: Patient) -> PatientMedicationsViewModel {
+    if let existing = medicationViewModels[patient.id] { return existing }
+    let viewModel = PatientMedicationsViewModel(
+      client: client,
+      patient: .init(id: patient.id, name: patient.name)
+    )
+    medicationViewModels[patient.id] = viewModel
+    return viewModel
+  }
+
+  /// 取得（必要時建立）該病人數值趨勢頁的 ViewModel。
   func detailViewModel(for patient: Patient) -> PatientDetailViewModel {
     if let existing = detailViewModels[patient.id] {
       return existing

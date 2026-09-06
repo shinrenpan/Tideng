@@ -19,3 +19,25 @@ public extension Sequence<FHIR.Identifier> {
         }?.value?.value?.string
     }
 }
+
+public extension Sequence<FHIR.Identifier> {
+
+    /// 國民身分證統一編號。
+    ///
+    /// 以 **system** 認定，不以 type coding 的 code 認定。TW Core 把它標成 `NNxxx`，
+    /// 真正說明是哪一國的是 code 上的 `identifier-suffix` extension——讀 coding 上的
+    /// extension 比比對一個 URI 脆弱得多，而 system 本來就是 identifier 的命名空間。
+    ///
+    /// 沒有就回 `nil`。**不推導、不重組、不驗證**：這是真人的身分證號，
+    /// 顯示一個 server 沒送來的值等於替他發明一組身分。
+    var nationalIdentificationNumber: String? {
+        first { $0.system?.value?.url.absoluteString == FHIR.twNationalIdentifierSystem }?
+            .value?.value?.string
+    }
+}
+
+public extension FHIR {
+
+    /// 內政部的身分證字號命名空間（TW Core）。
+    static let twNationalIdentifierSystem = "http://www.moi.gov.tw"
+}

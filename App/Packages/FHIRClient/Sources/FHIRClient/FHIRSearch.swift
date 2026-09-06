@@ -70,6 +70,56 @@ public extension FHIRSearch {
     }
 }
 
+// MARK: - 終點頁需要的查詢
+
+public extension FHIRSearch {
+
+    /// 這一位病人本身。
+    ///
+    /// 清單那一層已經有姓名與病歷號，但沒有身分證號——那需要看完整的 identifier 陣列。
+    /// 走 search 而不是 read（`Patient/<id>`）是為了讓三個終點頁拿到同一種形狀的回應
+    /// （`Bundle`），解碼與四態處理才不必為了一頁另開一條路徑。
+    static func patient(id: String) -> FHIRSearch {
+        FHIRSearch(
+            resourceType: "Patient",
+            parameters: [.init("_id", id)]
+        )
+    }
+
+    /// 某位病人的就診。
+    ///
+    /// `_include` 把參與的 practitioner 一併帶回，省下逐筆解析。但它只是最佳化——
+    /// server 不支援時就顯示 reference 本身，那仍然比空白有用。
+    ///
+    /// 排序在 client 端做：server 的 `_sort` 只認少數欄位且未知欄位靜默丟棄，
+    /// 依賴它等於讓「有沒有排序」變成看不見的差異。
+    static func encounters(patientID: String, count: Int = 100) -> FHIRSearch {
+        FHIRSearch(
+            resourceType: "Encounter",
+            parameters: [
+                .init("patient", patientID),
+                .init("_include", "Encounter:participant"),
+                .init("_count", String(count))
+            ]
+        )
+    }
+
+    /// 某位病人的處方。
+    ///
+    /// 不加 `status=active`：這一頁要呈現的是這位病人的處方記錄，把已停用的濾掉
+    /// 會讓畫面說不出「這裡只列出了一部分」。主畫面的計數才需要 active 那條線。
+    static func medicationRequests(patientID: String, count: Int = 100) -> FHIRSearch {
+        FHIRSearch(
+            resourceType: "MedicationRequest",
+            parameters: [
+                .init("patient", patientID),
+                .init("_include", "MedicationRequest:requester"),
+                .init("_count", String(count))
+            ]
+        )
+    }
+}
+
 // MARK: - 主畫面切片需要的查詢
 
 public extension FHIRSearch {

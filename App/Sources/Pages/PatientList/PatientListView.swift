@@ -47,7 +47,17 @@ struct PatientListView: View {
 
     content()
       .navigationDestination(item: $bVM.state.presentedPatient) { patient in
-        PatientDetailView(viewModel: viewModel.detailViewModel(for: patient))
+        // 終點頁由抵達這份清單的切片決定，不是由病人決定。
+        switch viewModel.state.slice.destination {
+        case .record:
+          PatientRecordView(viewModel: viewModel.recordViewModel(for: patient))
+        case .encounters:
+          PatientEncountersView(viewModel: viewModel.encountersViewModel(for: patient))
+        case .medications:
+          PatientMedicationsView(viewModel: viewModel.medicationsViewModel(for: patient))
+        case .vitals:
+          PatientDetailView(viewModel: viewModel.detailViewModel(for: patient))
+        }
       }
       .navigationTitle(viewModel.state.slice.title)
       .searchable(text: $bVM.state.keyword, prompt: "Name or record number")

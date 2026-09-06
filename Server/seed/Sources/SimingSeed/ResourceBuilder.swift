@@ -147,21 +147,87 @@ enum ResourceBuilder {
     static func medicationRequest(
         patientID: String,
         practitionerID: String,
-        medication: String,
+        medication: SeedData.MedicationSpec,
         seq: Int,
         authoredOn: Date
     ) -> (resource: FHIR.MedicationRequest, identifier: String) {
         let value = "medication-request-\(seq)"
         var resource = FHIR.MedicationRequest(
             intent: FHIRPrimitive(MedicationRequestIntent.order),
-            medication: .codeableConcept(FHIR.CodeableConcept(text: FHIRPrimitive(FHIRString(medication)))),
+            medication: .codeableConcept(FHIR.CodeableConcept(text: FHIRPrimitive(FHIRString(medication.name)))),
             status: FHIRPrimitive(MedicationrequestStatus.active),
             subject: .to("Patient", id: patientID)
         )
         resource.identifier = [.make(system: SeedData.identifierSystem, value: value)]
         resource.requester = .to("Practitioner", id: practitionerID)
         resource.authoredOn = authoredOn.asFHIRDateTime(in: SeedData.timeZone)
+        resource.dosageInstruction = dosageInstruction(for: medication.shape)
         return (resource, value)
+    }
+
+    /// 把時程形態轉成 FHIR 的 `dosageInstruction` 陣列。
+    ///
+    /// 這裡刻意**不**替未指定時間的處方補上 `timeOfDay`。「一天三次」到底是哪三次由
+    /// 機構的給藥常規決定，不是這份記錄回答得了的問題——補上去就是把假設寫成處方。
+    private static func dosageInstruction(for shape: SeedData.DosageShape) -> [Dosage] {
+        switch shape {
+        case let .unspecifiedTimes(step), let .explicitTimes(step):
+            [dosage(step)]
+
+        case let .asNeeded(reason, dose):
+            // 需要時服用沒有時程可言，所以整個 timing 不存在——而不是存在但空著。
+            // 空的 timing 會被讀成「有時程但沒填」，那是另一回事。
+            {
+                var value = Dosage()
+                value.asNeeded = .codeableConcept(
+                    FHIR.CodeableConcept(text: FHIRPrimitive(FHIRString(reason)))
+                )
+                value.doseAndRate = [doseAndRate(dose)]
+                return [value]
+            }()
+
+        case let .tapering(steps):
+            // 順序靠 `sequence` 表達，不靠陣列位置——陣列順序在傳輸與儲存中沒有保證。
+            steps.enumerated().map { index, step in
+                var value = dosage(step)
+                value.sequence = FHIRPrimitive(FHIRInteger(Int32(index + 1)))
+                return value
+            }
+        }
+    }
+
+    private static func dosage(_ step: SeedData.DosageStep) -> Dosage {
+        var repeats = TimingRepeat()
+        repeats.frequency = FHIRPrimitive(FHIRPositiveInteger(Int32(step.frequency)))
+        repeats.period = FHIRPrimitive(FHIRDecimal(Decimal(step.period)))
+        repeats.periodUnit = FHIRPrimitive(FHIRString(step.periodUnit))
+        if !step.timesOfDay.isEmpty {
+            repeats.timeOfDay = step.timesOfDay.map {
+                FHIRPrimitive(FHIRTime(hour: $0.hour, minute: $0.minute, second: 0))
+            }
+        }
+        if let days = step.days {
+            var duration = Duration()
+            duration.value = FHIRPrimitive(FHIRDecimal(Decimal(days)))
+            duration.unit = FHIRPrimitive(FHIRString("day"))
+            duration.system = FHIRPrimitive(FHIRURI(stringLiteral: "http://unitsofmeasure.org"))
+            duration.code = FHIRPrimitive(FHIRString("d"))
+            repeats.bounds = .duration(duration)
+        }
+
+        var timing = Timing()
+        timing.repeat = repeats
+
+        var value = Dosage()
+        value.timing = timing
+        value.doseAndRate = [doseAndRate(step.dose)]
+        return value
+    }
+
+    private static func doseAndRate(_ dose: SeedData.Dose) -> DosageDoseAndRate {
+        var value = DosageDoseAndRate()
+        value.dose = .quantity(.ucum(dose.value, unit: dose.unit, code: dose.code))
+        return value
     }
 
     // MARK: - 共用
