@@ -30,10 +30,10 @@
 ## 6. 身分宣告的驗證
 
 - [x] 6.1 落實決策「id_token 驗簽失敗只讓身分消失，不中斷 session」：以 discovery 提供的 jwks 位址取得公鑰並快取，簽章與 issuer 皆通過時才取出 `fhirUser`；驗簽失敗、issuer 不符、jwks 取得失敗三者皆不產生身分且不結束 session。滿足 Requirement: The identity claim is verified before it is trusted。驗證：SmartAuthTests 以 stub 提供 jwks，涵蓋簽章正確、簽章錯誤、issuer 不符、缺少 id_token 四種情況，斷言身分有無與 session 是否存續，並斷言公鑰取得後重複驗證不再重新請求
-- [ ] 6.2 401 的處理維持既有形狀並在真實驗證器上成立：持有 refresh token 時刷新一次並重試，refresh 被拒或沒有 refresh token 時回到登入頁。滿足 Requirement: Rejection by the resource server is handled as rejection。驗證：模擬器上以 Keycloak 縮短的 token 壽命實測——擱置至過期後下拉刷新仍取得資料；再以撤銷 session 使 refresh 失敗，確認回到登入頁
+- [x] 6.2 401 的處理維持既有形狀並在真實驗證器上成立：持有 refresh token 時刷新一次並重試，refresh 被拒或沒有 refresh token 時回到登入頁。滿足 Requirement: Rejection by the resource server is handled as rejection。驗證：模擬器上以 Keycloak 縮短的 token 壽命實測——擱置至過期後下拉刷新仍取得資料；再使 refresh 失敗，確認回到登入頁。**實測發現「登出 session」切不斷**——`offline_access` 發的是 offline token，設計上活過 session 登出；真正切得斷的是撤銷 consent 或停用帳號（兩者皆回 400 `invalid_grant`），而 app 對 400 的處理已有單元測試涵蓋
 
 ## 7. 文件與整體驗證
 
 - [x] 7.1 `Server/README.md` 改寫為新的啟動方式（單一指令、`.env` 的角色、seed 仍在 host），並記錄 realm 設定的來源是匯入檔而非介面。驗證：依 README 在乾淨環境從零走一次，過程中不需要本文件以外的知識
-- [ ] 7.2 `docs/STATUS.md` 移除「無授權會被拒絕」的待驗證條目並記錄實測結果，同時更新環境描述；一併記錄環境只含產生的示範資料、帳號屬於虛構的醫事人員。滿足 Requirement: The environment holds no real patient data。驗證：文件中不再有已完成事項被列為待驗證，且環境內容的來源有明確陳述
+- [x] 7.2 `docs/STATUS.md` 移除「無授權會被拒絕」的待驗證條目並記錄實測結果，同時更新環境描述；一併記錄環境只含產生的示範資料、帳號屬於虛構的醫事人員。滿足 Requirement: The environment holds no real patient data。驗證：文件中不再有已完成事項被列為待驗證，且環境內容的來源有明確陳述
 - [ ] 7.3 完整流程在模擬器上以英文與繁中各跑一次：輸入 base URL、Keycloak 登入、四張切片卡片、病人清單、詳情趨勢圖。驗證：兩種語言各截圖一次，確認登入頁出現、職位正確顯示、資料正確載入

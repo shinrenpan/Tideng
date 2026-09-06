@@ -2,10 +2,11 @@
 
 *更新於 2026-09-04*
 
-已實際跑通的完整路徑：**輸入任意 FHIR base URL → SMART standalone 登入 → 側邊欄主畫面
-→ 病人切片 grid → 病人清單 → 病人詳情與生命徵象趨勢圖**。登入不是模擬的——`Practitioner`
-reference 由 `id_token` 的 `fhirUser` claim 解出，所有臨床資料都帶著 Bearer token 從 FHIR
-server 取得。
+已實際跑通的完整路徑：**輸入任意 FHIR base URL → 在授權伺服器輸入帳密 → 側邊欄主畫面
+→ 病人切片 grid → 病人清單 → 病人詳情與生命徵象趨勢圖**。
+
+登入是真的：密碼輸在 Keycloak 的頁面上，**app 從頭到尾看不到它**；`id_token` 的簽章
+與 issuer 都驗過才採用其中的 `fhirUser`；FHIR server 會拒絕任何它沒簽過的 token。
 
 ---
 
@@ -41,13 +42,14 @@ demo 階段只能靠 Siming 或公開 sandbox。
 |---|---|
 | FHIR 命名空間、LOINC 常數、Bundle helper、容錯解碼、參考範圍三態 | `App/Packages/FHIRCore`（37 個測試） |
 | REST client、search builder、錯誤三分類 | `App/Packages/FHIRClient`（22 個測試） |
-| SMART：discovery、能力檢查、PKCE、`state`、`aud`、token 交換、refresh 序列化、Keychain、瀏覽器授權 | `App/Packages/SmartAuth`（31 個測試） |
+| SMART：discovery、能力檢查、PKCE、`state`、`aud`、token 交換、refresh 序列化、Keychain、瀏覽器授權 | `App/Packages/SmartAuth`（44 個測試） |
 | 登入畫面（base URL + preset + 進階 client_id） | `Sources/Pages/ServerSetup` |
 | 側邊欄主畫面（`NavigationSplitView`） | `Sources/Pages/Main` |
 | 病人清單（真實資料、切片、搜尋、四態、下拉刷新） | `Sources/Pages/PatientList` |
 | 主畫面兩層導航：身分 header、大分類、病人切片 grid 與計數 | `Sources/Pages/Main` |
 | 病人詳情 + 生命徵象趨勢圖（Swift Charts、參考範圍帶、四態） | `Sources/Pages/PatientDetail` |
-| 本機 SMART launcher | `Server/docker-compose.yml` |
+| `id_token` 簽章與 issuer 驗證（jwks、快取、驗不過只讓身分留白） | `App/Packages/SmartAuth` |
+| 開發環境：Keycloak（帳密登入）+ Siming + Postgres，一個指令起完 | `Server/docker-compose.yml`、`Server/keycloak/` |
 | Siming 接上（Phase B）+ 台灣示範資料 seed | `Server/seed/`（Swift executable） |
 
 Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-detail-vitals`，
@@ -55,7 +57,7 @@ Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-deta
 其中兩條是這個產品的法規界線，現在寫在正式規格裡而非埋在某個 change 目錄：
 **使用者可見文字只陳述事實不做判讀**、**超出參考值只採用 server 提供的 referenceRange**。
 
-三個 package 共 90 個測試，app target 另有 72 個。
+三個 package 共 103 個測試，app target 另有 77 個。
 
 測試裡值得一提的三個：PKCE 用 **RFC 7636 附錄 B 的官方測試向量**驗證（證明符合規格而非
 自洽）；`aud` 參數有獨立測試（SMART 最常被漏、漏了部分 server 直接拒絕）；**10 個並發請求
@@ -63,14 +65,38 @@ Spectra 已歸檔三個 change：`main-navigation`、`demo-data`、`patient-deta
 
 ### 真實環境驗過的（不只單元測試）
 
+開發環境現在是 **Keycloak（授權）+ Siming（資源）**，登入要輸入真實帳密。
+smart-launcher-v2 已移除——它是協定模擬器，不問密碼也不驗 token，那讓下面整欄
+「反方向」長期無法驗證。
+
 | 項目 | 結果 |
 |---|---|
-| 完整 standalone launch（discovery → 授權 → 換 token） | 通過，`Practitioner` reference 從 `id_token` 解出並顯示 |
-| 帶 Bearer token 取得病人資料 | 通過。launcher 對帶進來的 token 會做 JWT 驗證（亂編的 token 回 `401 Invalid token: jwt malformed`），所以拿到 200 就代表 token 有效 |
-| **token 過期後自動換發** | 通過。access token 壽命設 5 分鐘（`ACCESS_TOKEN_LIFETIME`），擱置超過後下拉刷新仍正常取得資料，未被踢回登入頁 |
+| 完整 standalone launch（discovery → 帳密登入 → 換 token） | 通過。四項 scope 全數授予、`aud` 正確、`fhirUser` 解出對應的 practitioner |
+| 帶 Bearer token 取得病人資料 | 通過 |
+| **token 過期後自動換發** | 通過。壽命 300 秒，擱置超過後下拉刷新仍正常取得資料，未被踢回登入頁 |
+| **無授權會被拒絕** ← 長期掛著的那條 | **通過**。不帶 token、亂編的 token、issuer 不符的 token，三者皆 401；jwks 抓不到時 Siming 直接退出，不會有請求被放行 |
+| **偽造得再像也被拒絕** | 通過。`alg=none`、猜密鑰的 HS256、自己金鑰正確簽的 RS256——即使 `iss`／`aud`／`scope`／`fhirUser` 全部填對，一律 401 |
+| **PKCE 有強制** | 通過。不帶 `code_verifier` 換 token 得 400 |
+| **錯誤密碼不發 code** | 通過。停在登入頁，回呼網址不帶 code |
 
-尚未驗證的反方向：**無授權會被拒絕**。launcher 在完全不帶 token 時放行（開發模式），
-要驗證強制授權得等 Phase B 接上 Siming，或用 launcher 的 `auth_error` 模擬。
+### ⚠️ 「把使用者登出」切不斷已經發出去的裝置
+
+實測（2026-09-06）：
+
+| 撤銷方式 | refresh token 還能用嗎 |
+|---|---|
+| 從管理台登出該使用者的 session | **還能用** |
+| 撤銷 consent（offline token） | 400 `invalid_grant` — 切斷 |
+| 停用帳號 | 400 `invalid_grant` — 切斷 |
+
+原因是 `offline_access`：它發的是 offline token，**設計上就活過 session 登出**。
+
+這對「共用 iPad、人員離職」是實際的問題——以為把人登出就切斷了，其實那台裝置還能
+繼續讀資料直到 refresh token 自己過期。正式部署的作業程序必須寫明：**要切斷裝置，
+停用帳號或撤銷 consent，不是登出。**
+
+（`offline_access` 本身不能拿掉——沒有它，閒置一段時間就會被踢回登入頁，
+那在推車與診間輪流使用的場景下不可用。）
 
 ### 實作中撞到的真實問題
 
@@ -143,6 +169,7 @@ server 端的過濾對這個 app 是**效能**，不是正確性。三處宣告�
 ## 3. 還沒做的
 
 - 版面粗糙處：搜尋框飄在右上角、清單列太寬
+- 用藥清單：「用藥中」那張卡片點進去只有病人清單，整個 app 看不到藥
 - TW Core 驗證
 - 寫入路徑、離線佇列、給藥核對、AuditEvent、session 安全（背景遮罩 / 閒置鎖定）
 - MDM Managed App Configuration ← 機構透過 THAS 訂閱時會需要
@@ -205,5 +232,9 @@ launcher base URL 的 `sim` 段）記在 [`../App/CLAUDE.md`](../App/CLAUDE.md)�
 
 ## 6. 下一步
 
-1. 修版面粗糙處（搜尋框位置、清單列寬度）
-2. TW Core profile 驗證（需啟用 HL7 Validator sidecar）
+1. **用藥清單** —— 四張切片卡片裡唯一沒有終點的一張
+2. 修版面粗糙處（搜尋框位置、清單列寬度）
+3. TW Core profile 驗證（需啟用 HL7 Validator sidecar）
+
+部署到公開主機是**業務決定**而非技術前置：正式環境由診所提供 FHIR server 與 IdP，
+`Server/` 永遠不出貨。什麼時候需要把 iPad 留在對方手上，什麼時候再做。
