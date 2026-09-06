@@ -52,4 +52,58 @@ enum Fixtures {
     static let invalidGrant = Data("""
     { "error": "invalid_grant", "error_description": "授權碼已過期或已使用" }
     """.utf8)
+
+    // MARK: - 缺漏的 discovery 文件
+    //
+    // 五種缺漏各一份。缺前三個欄位時 client 連解都解不出來，缺後兩項能力時
+    // 解得出來但不該進入授權——兩類的訊息必須分得出來，否則使用者（和之後
+    // 除錯的人）只會看到「連不上」。
+
+    /// 缺 `authorization_endpoint`：不知道要把使用者送去哪裡。
+    static let configurationWithoutAuthorizeEndpoint = Data("""
+    {
+      "token_endpoint": "https://example.org/token",
+      "code_challenge_methods_supported": ["S256"],
+      "capabilities": ["launch-standalone", "client-public"]
+    }
+    """.utf8)
+
+    /// 缺 `token_endpoint`：換得到 code 卻換不到 token。
+    static let configurationWithoutTokenEndpoint = Data("""
+    {
+      "authorization_endpoint": "https://example.org/auth",
+      "code_challenge_methods_supported": ["S256"],
+      "capabilities": ["launch-standalone", "client-public"]
+    }
+    """.utf8)
+
+    /// 缺 `code_challenge_methods_supported`：完全沒宣告 PKCE 支援。
+    static let configurationWithoutChallengeMethods = Data("""
+    {
+      "authorization_endpoint": "https://example.org/auth",
+      "token_endpoint": "https://example.org/token",
+      "capabilities": ["launch-standalone", "client-public"]
+    }
+    """.utf8)
+
+    /// 純 resource server：解得出來，但沒有 standalone launch。
+    static let configurationWithoutStandaloneLaunch = Data("""
+    {
+      "authorization_endpoint": "https://example.org/auth",
+      "token_endpoint": "https://example.org/token",
+      "code_challenge_methods_supported": ["S256"],
+      "capabilities": ["permission-v1", "client-public"]
+    }
+    """.utf8)
+
+    /// 只接受 confidential client：public client 沒有 secret，走不了。
+    static let configurationWithoutPublicClient = Data("""
+    {
+      "authorization_endpoint": "https://example.org/auth",
+      "token_endpoint": "https://example.org/token",
+      "code_challenge_methods_supported": ["S256"],
+      "capabilities": ["launch-standalone", "client-confidential-symmetric"]
+    }
+    """.utf8)
 }
+

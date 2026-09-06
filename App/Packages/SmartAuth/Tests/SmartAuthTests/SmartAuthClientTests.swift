@@ -49,6 +49,47 @@ extension StubBackedTests {
         #expect(throws: SmartAuthError.self) { try legacy.validateForStandaloneLaunch() }
     }
 
+    // MARK: - 五種缺漏都必須在開瀏覽器之前擋下來
+
+    @Test(
+      "缺少流程必需的欄位時，訊息指出缺了哪一個",
+      arguments: [
+        (Fixtures.configurationWithoutAuthorizeEndpoint, "authorization_endpoint"),
+        (Fixtures.configurationWithoutTokenEndpoint, "token_endpoint"),
+        (Fixtures.configurationWithoutChallengeMethods, "code_challenge_methods_supported")
+      ]
+    )
+    func namesTheMissingField(document: Data, field: String) async throws {
+        StubURLProtocol.stub(body: document)
+
+        let error = await #expect(throws: SmartAuthError.self) {
+            _ = try await makeClient().discover(baseURL: base)
+        }
+
+        // 「設定格式無法解讀」對使用者與之後除錯的人都沒有用——訊息要說是哪個欄位，
+        // 才分得出「server 不支援」與「我打錯網址」。
+        let reason = try #require(error?.serverDiagnostics)
+        #expect(reason.contains(field), "訊息沒有指出 \(field)：\(reason)")
+    }
+
+    @Test(
+      "缺少必要能力時在授權前擋下，且分得出缺的是哪一項",
+      arguments: [
+        (Fixtures.configurationWithoutStandaloneLaunch, "launch-standalone"),
+        (Fixtures.configurationWithoutPublicClient, "client-public")
+      ]
+    )
+    func namesTheMissingCapability(document: Data, capability: String) throws {
+        let configuration = try JSONDecoder().decode(SmartConfiguration.self, from: document)
+
+        let error = #expect(throws: SmartAuthError.self) {
+            try configuration.validateForStandaloneLaunch()
+        }
+
+        let reason = try #require(error?.serverDiagnostics)
+        #expect(reason.contains(capability), "訊息沒有指出 \(capability)：\(reason)")
+    }
+
     // MARK: - Token 交換
 
     @Test("換 token 送出 PKCE verifier 與正確的 grant_type")

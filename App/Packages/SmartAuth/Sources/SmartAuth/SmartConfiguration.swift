@@ -31,13 +31,13 @@ public extension SmartConfiguration {
     /// 是 server 不支援，不是使用者做錯。
     func validateForStandaloneLaunch() throws {
         guard capabilities.contains("launch-standalone") else {
-            throw SmartAuthError.unsupportedServer(reason: "此伺服器不支援 standalone 登入")
+            throw SmartAuthError.unsupportedServer(reason: "此伺服器不支援 standalone 登入（capabilities 缺少 launch-standalone）")
         }
         guard capabilities.contains("client-public") else {
-            throw SmartAuthError.unsupportedServer(reason: "此伺服器不接受 public client")
+            throw SmartAuthError.unsupportedServer(reason: "此伺服器不接受 public client（capabilities 缺少 client-public）")
         }
         guard codeChallengeMethodsSupported.contains("S256") else {
-            throw SmartAuthError.unsupportedServer(reason: "此伺服器不支援 PKCE (S256)")
+            throw SmartAuthError.unsupportedServer(reason: "此伺服器不支援 PKCE（code_challenge_methods_supported 缺少 S256）")
         }
     }
 

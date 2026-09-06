@@ -30,6 +30,13 @@ public struct SmartAuthClient: Sendable {
 
         do {
             return try JSONDecoder().decode(SmartConfiguration.self, from: data)
+        } catch let DecodingError.keyNotFound(key, _) {
+            // 指名缺了哪個欄位。「設定格式無法解讀」對使用者和之後除錯的人都沒有用——
+            // 它分不出「這台 server 不支援這個流程」與「我把網址打錯了」，而那兩者
+            // 的下一步完全不同。
+            throw SmartAuthError.discoveryFailed(
+                reason: "伺服器的 SMART 設定缺少 \(key.stringValue)"
+            )
         } catch {
             throw SmartAuthError.discoveryFailed(reason: "設定格式無法解讀")
         }

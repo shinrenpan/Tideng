@@ -24,8 +24,8 @@
 
 ## 5. 客戶端對伺服器的要求
 
-- [ ] 5.1 [P] discovery 缺少 `authorization_endpoint`、`token_endpoint`、`code_challenge_methods_supported` 任一者，或 `capabilities` 缺 `launch-standalone`／`client-public` 時，在開啟瀏覽器之前失敗，訊息指出是伺服器不支援且缺漏原因可區分。滿足 Requirement: Discovery rejects a server that cannot support the flow。驗證：SmartAuthTests 對五種缺漏各注入一份文件，斷言拋出且未進入授權
-- [ ] 5.2 [P] app 不呈現密碼欄位、不傳輸也不儲存密碼；持久化的資料中沒有任何欄位含有密碼。滿足 Requirement: The app never receives the user's credentials。驗證：SmartAuthTests 斷言 `TokenSet` 序列化後的欄位集合只含 token 相關項目；並以搜尋確認 app 端無密碼輸入元件
+- [x] 5.1 [P] discovery 缺少 `authorization_endpoint`、`token_endpoint`、`code_challenge_methods_supported` 任一者，或 `capabilities` 缺 `launch-standalone`／`client-public` 時，在開啟瀏覽器之前失敗，訊息指出是伺服器不支援且缺漏原因可區分。滿足 Requirement: Discovery rejects a server that cannot support the flow。驗證：SmartAuthTests 對五種缺漏各注入一份文件，斷言拋出且未進入授權
+- [x] 5.2 [P] app 不呈現密碼欄位、不傳輸也不儲存密碼；持久化的資料中沒有任何欄位含有密碼。滿足 Requirement: The app never receives the user's credentials。驗證：SmartAuthTests 斷言 `TokenSet` 序列化後的欄位集合只含 token 相關項目；並以搜尋確認 app 端無密碼輸入元件
 
 ## 6. 身分宣告的驗證
 

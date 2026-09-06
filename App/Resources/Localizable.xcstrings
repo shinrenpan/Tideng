@@ -211,22 +211,22 @@
         }
       }
     },
-    "Local SMART Launcher": {
+    "Local Siming": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "本機 SMART Launcher"
+            "value": "本機 Siming"
           }
         }
       }
     },
-    "Local Siming with demo data, via the SMART launcher": {
+    "Local Siming with demo data, signing in through Keycloak": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "本機 Siming（含示範資料），經 SMART launcher"
+            "value": "本機 Siming（含示範資料），經 Keycloak 登入"
           }
         }
       }
