@@ -12,7 +12,7 @@ enum ResourceBuilder {
     // MARK: - Practitioner
 
     static func practitioner(_ spec: SeedData.PersonSpec) -> (resource: FHIR.Practitioner, identifier: String) {
-        let value = "practitioner-\(spec.seq)"
+        let value = SeedData.practitionerResourceID(seq: spec.seq)
         var resource = FHIR.Practitioner()
         resource.identifier = [.make(system: SeedData.identifierSystem, value: value)]
         resource.name = [humanName(family: spec.family, given: spec.given)]

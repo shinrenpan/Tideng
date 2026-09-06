@@ -49,16 +49,18 @@ let hour: TimeInterval = 3600
 
 var practitionerTally = SeedTally()
 var practitionerIDs: [String] = []
-/// seq → server 分配的 id。角色要掛回正確的人，不能靠陣列位置（有人建立失敗就會錯位）。
+/// seq → 實際寫入成功的 id。角色要掛回正確的人，不能靠陣列位置（有人失敗就會錯位）。
+/// 值可由 `SeedData.practitionerResourceID(seq:)` 推導，這裡仍以寫入結果填入——
+/// 推導得出來不代表寫進去了，引用一個不存在的資源會造成 dangling reference。
 var practitionerIDBySeq: [Int: String] = [:]
 
 for spec in SeedData.practitioners {
     let (resource, identifier) = ResourceBuilder.practitioner(spec)
-    let outcome = try await client.post(
+    // 唯一使用固定 id 的資源型別：只有會被外部按身分引用的才需要，其餘讓 server 分配。
+    let outcome = try await client.put(
         resource,
         type: "Practitioner",
-        identifierSystem: SeedData.identifierSystem,
-        identifierValue: identifier
+        id: SeedData.practitionerResourceID(seq: spec.seq)
     )
     practitionerTally.record(outcome, identifier: identifier)
     if let id = outcome.id {

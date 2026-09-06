@@ -16,6 +16,15 @@ enum SeedData {
 
     static let timeZone = TimeZone(identifier: "Asia/Taipei")!
 
+    /// Practitioner 的**資源 id**（不是 identifier 的值，雖然這裡刻意讓兩者相同）。
+    ///
+    /// 固定而非由 server 分配：Keycloak 的帳號屬性存的是 `Practitioner/<id>`，
+    /// 而 server 分配的 UUID 每次重灌都會變，綁定會失效。
+    ///
+    /// 只依賴 seq——不查詢 server 就能算出任何一位醫事人員的位址，這正是外部系統
+    /// 能長期綁定的前提。
+    static func practitionerResourceID(seq: Int) -> String { "practitioner-\(seq)" }
+
     // MARK: - 人
 
     struct PersonSpec {

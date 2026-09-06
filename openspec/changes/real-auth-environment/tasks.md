@@ -1,7 +1,7 @@
 ## 1. 種子資料的穩定識別
 
-- [ ] 1.1 落實決策「Practitioner 改用 client-assigned id」：seed client 具備以指定 id 寫入的路徑，與既有的 conditional create 並存，其餘資源型別行為不變。驗證：以該路徑對同一個 id 寫入兩次，第二次不產生新資源
-- [ ] 1.2 practitioner 以 `practitioner-<seq>` 為資源 id 建立，id 可從 seed 定義推導而不需查詢 server。滿足 Requirement: Practitioner identifiers are stable across reseeds。驗證：重建資料庫後連跑兩次 seed，`Practitioner/practitioner-1` 可直接讀取、practitioner 總數為 4 且 id 不變
+- [x] 1.1 落實決策「Practitioner 改用 client-assigned id」：seed client 具備以指定 id 寫入的路徑，與既有的 conditional create 並存，其餘資源型別行為不變。驗證：以該路徑對同一個 id 寫入兩次，第二次不產生新資源
+- [x] 1.2 practitioner 以 `practitioner-<seq>` 為資源 id 建立，id 可從 seed 定義推導而不需查詢 server。滿足 Requirement: Practitioner identifiers are stable across reseeds。驗證：重建資料庫後連跑兩次 seed，`Practitioner/practitioner-1` 可直接讀取、practitioner 總數為 4 且 id 不變
 
 ## 2. 容器化的環境
 
