@@ -27,6 +27,60 @@ struct FHIRSeedClient {
 
     let baseURL: URL
     private let session = URLSession(configuration: .ephemeral)
+    /// Bearer token。server 啟用驗證後沒有它就寫不進去；`nil` 表示 server 沒開驗證。
+    let accessToken: String?
+
+    init(baseURL: URL, accessToken: String? = nil) {
+        self.baseURL = baseURL
+        self.accessToken = accessToken
+    }
+
+    /// 從 server 自己的 discovery 找到授權伺服器，再以機器帳號換一張 token。
+    ///
+    /// 刻意走 discovery 而不是把 Keycloak 的位址寫死：**seed 應該和 app 用同一套
+    /// 方式找到授權伺服器**，否則它驗不到那條路徑，而那條路徑正是最容易設錯的。
+    ///
+    /// 用 service account 而不是某位醫事人員的帳密——資料載入工具不該持有人的密碼。
+    ///
+    /// - Returns: token；server 未啟用 SMART 時回 `nil`（同一支 seed 要能對付兩種環境）。
+    static func fetchToken(
+        baseURL: URL, clientID: String, clientSecret: String
+    ) async throws -> String? {
+        let session = URLSession(configuration: .ephemeral)
+        var request = URLRequest(url: baseURL.appendingPathComponent(".well-known/smart-configuration"))
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        guard let (data, response) = try? await session.data(for: request),
+              let http = response as? HTTPURLResponse, http.statusCode == 200,
+              let config = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let tokenEndpoint = (config["token_endpoint"] as? String).flatMap(URL.init(string:))
+        else {
+            // server 沒有啟用 SMART（沒有 .well-known）——不需要 token，照舊寫入。
+            return nil
+        }
+
+        var token = URLRequest(url: tokenEndpoint)
+        token.httpMethod = "POST"
+        token.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        token.httpBody = Data([
+            "grant_type=client_credentials",
+            "client_id=\(clientID)",
+            "client_secret=\(clientSecret)"
+        ].joined(separator: "&").utf8)
+
+        let (body, tokenResponse) = try await session.data(for: token)
+        guard let http = tokenResponse as? HTTPURLResponse, http.statusCode == 200,
+              let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let value = json["access_token"] as? String
+        else {
+            let detail = String(decoding: body.prefix(200), as: UTF8.self)
+            throw SeedAuthError.tokenRequestFailed(detail)
+        }
+        return value
+    }
+
+    private func authorized(_ request: inout URLRequest) {
+        if let accessToken { request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization") }
+    }
 
     /// - Parameter condition: conditional create 的比對條件，預設用 identifier。
     ///
@@ -51,6 +105,7 @@ struct FHIRSeedClient {
             forHTTPHeaderField: "If-None-Exist"
         )
 
+        authorized(&request)
         let encoder = JSONEncoder()
         request.httpBody = try encoder.encode(resource)
 
@@ -104,6 +159,7 @@ struct FHIRSeedClient {
         request.httpMethod = "PUT"
         request.setValue("application/fhir+json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/fhir+json", forHTTPHeaderField: "Accept")
+        authorized(&request)
         request.httpBody = try JSONEncoder().encode(body)
 
         let (data, response) = try await session.data(for: request)
@@ -127,6 +183,7 @@ struct FHIRSeedClient {
         var request = URLRequest(url: baseURL.appendingPathComponent(type).appendingPathComponent(id))
         request.httpMethod = "GET"
         request.setValue("application/fhir+json", forHTTPHeaderField: "Accept")
+        authorized(&request)
         guard let (_, response) = try? await session.data(for: request),
               let http = response as? HTTPURLResponse
         else { return false }
@@ -184,4 +241,16 @@ struct SeedTally {
     }
 
     var isClean: Bool { rejected.isEmpty }
+}
+
+
+enum SeedAuthError: Error, CustomStringConvertible {
+    case tokenRequestFailed(String)
+
+    var description: String {
+        switch self {
+        case let .tokenRequestFailed(detail):
+            "無法向授權伺服器取得 token：\(detail)"
+        }
+    }
 }

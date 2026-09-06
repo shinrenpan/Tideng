@@ -49,7 +49,8 @@ services:
       - |
         set -e
         mkdir -p /opt/keycloak/data/import
-        sed "s|@SMART_AUDIENCE@|$${SMART_AUDIENCE}|g" \
+        sed -e "s|@SMART_AUDIENCE@|$${SMART_AUDIENCE}|g" \
+            -e "s|@SEED_SECRET@|$${SEED_SECRET}|g" \
           /realm-template/tideng-realm.json > /opt/keycloak/data/import/tideng-realm.json
         exec /opt/keycloak/bin/kc.sh start-dev --import-realm
     environment:
@@ -63,6 +64,8 @@ services:
       # 供 realm 匯入檔取用——audience 必須與 app 送出的 aud 逐字元相同。
       SMART_AUDIENCE: http://${PUBLIC_HOST:-localhost}:${FHIR_PORT:-8080}
       TIDENG_REDIRECT_URI: ${APP_REDIRECT_URI:-tideng://smart/callback}
+      # 灌資料用的機器帳號密鑰。開發用，不是機密。
+      SEED_SECRET: ${SEED_SECRET:-tideng-seed-dev-secret}
     volumes:
       - ./keycloak:/realm-template:ro
     ports:

@@ -28,14 +28,35 @@ guard let baseURL = URL(string: baseURLString), baseURL.scheme != nil else {
     exit(2)
 }
 
-let client = FHIRSeedClient(baseURL: baseURL)
-
 print("目標 server：\(baseURL.absoluteString)")
+// MARK: - 取得寫入權
+
+// server 啟用驗證後，沒有 token 就一筆也寫不進去。沒有啟用時這一步回 nil，
+// 照舊以無認證的方式寫入——同一支 seed 要能對付兩種環境。
+//
+// 這一步在連線檢查**之前**：top-level code 依序執行，client 要先有 token 才建得起來。
+let seedClientID = ProcessInfo.processInfo.environment["SEED_CLIENT_ID"] ?? "tideng-seed"
+let seedSecret = ProcessInfo.processInfo.environment["SEED_SECRET"] ?? "tideng-seed-dev-secret"
+let seedToken: String?
+do {
+    seedToken = try await FHIRSeedClient.fetchToken(
+        baseURL: baseURL, clientID: seedClientID, clientSecret: seedSecret
+    )
+    print(seedToken == nil
+          ? "server 未啟用 SMART，以無認證方式寫入"
+          : "已取得寫入用的 token（\(seedClientID)）")
+} catch {
+    FileHandle.standardError.write(Data("\(error)\n".utf8))
+    exit(1)
+}
+
+let client = FHIRSeedClient(baseURL: baseURL, accessToken: seedToken)
+
 guard await client.reachable() else {
     FileHandle.standardError.write(Data("""
     無法連線到 \(baseURL.absoluteString)
-    請確認 server 已啟動（Siming: scripts/run-macOS.sh，或見 Server/README.md）
-    
+    請確認 server 已啟動（見 Server/README.md）
+
     """.utf8))
     exit(1)
 }

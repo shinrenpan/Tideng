@@ -43,6 +43,30 @@
       "optionalClientScopes": [
         "offline_access"
       ]
+    },
+    {
+      "clientId": "tideng-seed",
+      "name": "Tideng seed loader",
+      "description": "灌示範資料用的機器帳號。不是給人登入的——資料載入工具不該持有某個人的密碼。",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "@SEED_SECRET@",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "fhir-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "@SMART_AUDIENCE@",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
     }
   ],
   "clientScopes": [
